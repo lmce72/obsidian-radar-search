@@ -13,8 +13,8 @@ export class FloatingSearch extends Component {
     Object.assign(this.backdropEl.style, {
       position: 'fixed',
       inset: '0',
-      backgroundColor: 'rgb(0, 0, 0)',
-      opacity: '0.7',
+      backgroundColor: 'var(--background-primary)',
+      opacity: '0.5',
       zIndex: '8999',
       touchAction: 'none'
     });
