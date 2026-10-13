@@ -8,6 +8,16 @@ export class FloatingSearch extends Component {
   }
 
   async open() {
+    this.backdropEl = this.document.body.createDiv({ cls: 'primecore-floating-search-backdrop' });
+    this.backdropEl.setAttribute('aria-hidden', 'true');
+    Object.assign(this.backdropEl.style, {
+      position: 'fixed',
+      inset: '0',
+      backgroundColor: 'var(--background-primary)',
+      opacity: '0.4',
+      zIndex: '8999',
+      touchAction: 'none'
+    });
     this.contentEl = this.document.body.createDiv({ cls: 'primecore-floating-search' });
     Object.assign(this.contentEl.style, {
       position: 'fixed',
@@ -27,6 +37,11 @@ export class FloatingSearch extends Component {
   }
 
   onload() {
+    this.registerDomEvent(this.backdropEl, 'pointerdown', event => {
+      event.preventDefault();
+      event.stopPropagation();
+      this.close();
+    });
     this.registerDomEvent(this.document, 'keydown', event => {
       if (event.key !== 'Escape') return;
       event.preventDefault();
@@ -40,6 +55,7 @@ export class FloatingSearch extends Component {
       if (!layers.some(element => element?.contains(event.target))) this.close();
     });
     this.register(() => {
+      this.backdropEl.remove();
       this.contentEl.remove();
       if (this.plugin.floatingSearch === this) this.plugin.floatingSearch = null;
     });
