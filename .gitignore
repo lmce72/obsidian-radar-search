@@ -1,0 +1,8 @@
+node_modules/
+dist/
+/main.js
+*.map
+/data.json
+migration-settings.json
+/history/
+.DS_Store

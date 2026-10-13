@@ -1,0 +1,9 @@
+{
+  "id": "primecore-search",
+  "name": "PrimeCore Search",
+  "version": "1.0.0",
+  "minAppVersion": "1.5.0",
+  "description": "Vault、命令、属性、链接与互联网搜索，支持中文全文索引、预设与搜索历史。",
+  "author": "CoreVortex",
+  "isDesktopOnly": false
+}
