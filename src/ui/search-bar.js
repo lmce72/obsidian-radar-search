@@ -130,6 +130,9 @@ constructor(plugin, container) {
             this._engineRowEl     = null;
         }
   _log(level, ...args) { this.plugin.report(level, ...args); }
+  _setSearchButtonBackground(button, hovering = false) {
+    button.style.background = hovering ? 'var(--background-secondary)' : 'var(--background-primary)';
+  }
   _listen(target, event, handler, options) {
             const document = this.container.ownerDocument;
             const window = document.defaultView;

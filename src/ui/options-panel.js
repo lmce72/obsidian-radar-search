@@ -499,7 +499,7 @@ _applyPanelBtnStyle(_panelOpen) {
             const rgb = this._getSeasonRgb();
             this._contentToggleBtn.style.color        = `rgb(${rgb})`;
             this._contentToggleBtn.style.borderColor  = `rgba(${rgb}, 0.8)`;
-            this._contentToggleBtn.style.background   = `rgba(${rgb}, 0.12)`;
+            this._setSearchButtonBackground(this._contentToggleBtn);
         }
 
 _switchPanelTab(tab) {

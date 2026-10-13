@@ -14,14 +14,14 @@ export class FloatingSearch extends Component {
       position: 'fixed',
       inset: '0',
       backgroundColor: 'var(--background-primary)',
-      opacity: '0.5',
+      opacity: '0.6',
       zIndex: '8999',
       touchAction: 'none'
     });
     this.contentEl = this.document.body.createDiv({ cls: 'primecore-floating-search' });
     Object.assign(this.contentEl.style, {
       position: 'fixed',
-      top: '35%',
+      top: '30%',
       left: '15%',
       width: '70%',
       zIndex: '9000'

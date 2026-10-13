@@ -411,6 +411,8 @@ _buildShell(rgb) {
             const clearIconEl = this._clearBtn.createSpan();
             Object.assign(clearIconEl.style, { display: "inline-flex", alignItems: "center", pointerEvents: "none" });
             this._setIcon(clearIconEl, "x", 15);
+            [this._scopeBtn, this._goBtn, this._contentToggleBtn, this._clearBtn]
+                .forEach(button => this._setSearchButtonBackground(button));
 
             // focus：input 背景变 callout 色，边框加深
             this._listen(this._input, "focus", () => {
@@ -424,13 +426,14 @@ _buildShell(rgb) {
                 }, 150);
             });
 
-            // 按钮 hover：轻主题色背景
+            // 按钮背景跟随主题变量，悬停使用次级背景。
+            // Theme variables keep resting and hover backgrounds in sync with the current theme.
             [this._scopeBtn, this._goBtn].forEach(btn => {
                 this._listen(btn, "mouseenter", () => {
-                    btn.style.background = `rgba(${rgb}, 0.1)`;
+                    this._setSearchButtonBackground(btn, true);
                 });
                 this._listen(btn, "mouseleave", () => {
-                    btn.style.background = "transparent";
+                    this._setSearchButtonBackground(btn);
                 });
             });
         }

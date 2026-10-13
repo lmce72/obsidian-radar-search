@@ -95,8 +95,8 @@ _bindEvents() {
                 this._listen(this._clearBtn, "touchstart", clearHandler.onTouchStart, { passive: true });
                 this._listen(this._clearBtn, "touchend", clearHandler.onTouchEnd);
                 this._listen(this._clearBtn, "click", () => { this._input.value = ""; this._syncClearBtn(); this._hideDropdown(); this._showHistory(moment().format("YYYY-MM-DD")); this._focusInput(); });
-                this._listen(this._clearBtn, "mouseenter", () => { this._clearBtn.style.background = `rgba(${this._getSeasonRgb()}, 0.1)`; });
-                this._listen(this._clearBtn, "mouseleave", () => { this._clearBtn.style.background = "transparent"; });
+                this._listen(this._clearBtn, "mouseenter", () => this._setSearchButtonBackground(this._clearBtn, true));
+                this._listen(this._clearBtn, "mouseleave", () => this._setSearchButtonBackground(this._clearBtn));
             }
 
             // 聚焦时：有内容则重跑搜索，无内容则展示历史
@@ -198,7 +198,7 @@ _bindEvents() {
             this._listen(this._contentToggleBtn, "mouseenter", () => {
                 const rgb = this._getSeasonRgb();
                 // 悬停要比静息态(0.12)更亮，否则会越悬停越暗
-                this._contentToggleBtn.style.background = `rgba(${rgb}, 0.2)`;
+                this._setSearchButtonBackground(this._contentToggleBtn, true);
             });
             this._listen(this._contentToggleBtn, "mouseleave", () => {
                 this._applyPanelBtnStyle(this._vaultPanelOpen);
