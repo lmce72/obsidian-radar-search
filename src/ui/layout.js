@@ -306,14 +306,14 @@ _buildShell(rgb) {
                 margin: "0",
                 padding: "0 14px",
                 borderRadius: "999px",
-                border: `1.5px solid rgba(${rgb}, 0.4)`,
-                background: "transparent",
+                border: "1.5px solid var(--background-modifier-border)",
+                background: "var(--background-secondary)",
                 color: "`rgb(${rgb})`",
                 fontSize: "14px",
                 fontFamily: "inherit",
                 outline: "none",
                 minWidth: "0",
-                transition: "background 0.15s, border-color 0.2s",
+                transition: "border-color 0.2s",
                 boxSizing: "border-box"
             });
             this._input.placeholder = this._modeConfig()[this._mode].placeholder;
@@ -414,17 +414,10 @@ _buildShell(rgb) {
             [this._scopeBtn, this._goBtn, this._contentToggleBtn, this._clearBtn]
                 .forEach(button => this._setSearchButtonBackground(button));
 
-            // focus：input 背景变 callout 色，边框加深
-            this._listen(this._input, "focus", () => {
-                this._input.style.background = "var(--background-secondary)";
-                this._input.style.borderColor = `rgba(${rgb}, 0.85)`;
-            });
-            this._listen(this._input, "blur", () => {
-                this._later(() => {
-                    this._input.style.background = "transparent";
-                    this._input.style.borderColor = `rgba(${rgb}, 0.4)`;
-                }, 150);
-            });
+            // 聚焦与失焦只更新边框，背景始终使用同一主题变量。
+            // Focus changes only the border; the input keeps its theme background.
+            this._listen(this._input, "focus", () => this._syncInputBorder());
+            this._listen(this._input, "blur", () => this._syncInputBorder());
 
             // 按钮背景跟随主题变量，悬停使用次级背景。
             // Theme variables keep resting and hover backgrounds in sync with the current theme.

@@ -47,7 +47,7 @@ _executeSearch() {
 _themeUpdate() {
             const rgb = this._getSeasonRgb();
             if (this._input) {
-                this._input.style.borderColor = `rgba(${rgb}, 0.4)`;
+                this._syncInputBorder();
                 this._input.style.color = `rgb(${rgb})`;
             }
             [this._scopeBtn, this._goBtn].forEach(btn => {

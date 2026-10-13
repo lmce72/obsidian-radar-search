@@ -133,6 +133,10 @@ constructor(plugin, container) {
   _setSearchButtonBackground(button, hovering = false) {
     button.style.background = hovering ? 'var(--background-secondary)' : 'var(--background-primary)';
   }
+  _syncInputBorder() {
+    const focused = this.container.ownerDocument.activeElement === this._input;
+    this._input.style.borderColor = focused ? 'var(--interactive-accent)' : 'var(--background-modifier-border)';
+  }
   _listen(target, event, handler, options) {
             const document = this.container.ownerDocument;
             const window = document.defaultView;

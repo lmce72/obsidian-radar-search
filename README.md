@@ -11,6 +11,8 @@
 
 浮动搜索框直接挂载搜索栏容器，宽度为视口的 70%，水平居中，顶部位于视口高度的 30% 处。后方遮罩复用 Obsidian 命令面板的 `modal-container mod-dim` 和 `modal-bg` 样式，颜色采用原生 `--background-modifier-cover`，透明度及效果由 Obsidian 和当前主题控制；搜索栏本身保持原有不透明度。搜索模式、搜索、搜索选项和清除按钮的背景使用 `--background-primary`，悬停背景使用 `--background-secondary`，随主题自动变化。打开后直接聚焦输入框，按 Esc 或点击遮罩关闭。搜索页在独立标签页打开，再次执行命令时激活已有搜索页并聚焦输入框。两种入口共享设置、历史与索引，同时打开时各自保留搜索栏状态。
 
+输入框背景始终使用 `--background-secondary`。聚焦时边框使用 `--interactive-accent`，失焦时使用 `--background-modifier-border`；焦点切换只改变边框颜色。
+
 笔记内嵌入口，无需 Dataview：
 
 ````markdown
