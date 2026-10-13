@@ -1,27 +1,12 @@
-import { Plugin, ItemView, MarkdownRenderChild, Notice, Modal, Component } from 'obsidian';
+import { Plugin, ItemView, MarkdownRenderChild, Notice } from 'obsidian';
 import { SearchBarComponent } from './ui/search-bar.js';
+import { FloatingSearch } from './ui/floating-search.js';
 import { createSearchIndexEngine } from './search/index-engine.js';
 import { SettingsStore } from './settings/store.js';
 import { SearchSettingTab } from './settings/tab.js';
 import { HistoryStore } from './history/store.js';
 
 const VIEW_TYPE='primecore-search';
-class FloatingSearchModal extends Modal {
-  constructor(plugin) { super(plugin.app);this.plugin=plugin;this.owner=new Component(); }
-  async onOpen() {
-    this.owner.load();
-    try {
-      const component=await this.plugin.mount(this.contentEl,this.owner);
-      if(this.plugin.floatingSearch===this)component._focusInput();
-    } catch(error) {this.plugin.report('error','浮动搜索框打开失败',error);this.close();}
-  }
-  onClose() {
-    this.plugin.unmount(this.contentEl);
-    this.owner.unload();
-    this.contentEl.empty();
-    if(this.plugin.floatingSearch===this)this.plugin.floatingSearch=null;
-  }
-}
 class SearchView extends ItemView {
   constructor(leaf,plugin) { super(leaf);this.plugin=plugin; }
   getViewType() {return VIEW_TYPE;}
@@ -89,7 +74,7 @@ export default class PrimeCoreSearchPlugin extends Plugin {
   }
   openFloatingSearch() {
     if(this.floatingSearch) {this.components.get(this.floatingSearch.contentEl)?.component._focusInput();return;}
-    this.floatingSearch=new FloatingSearchModal(this);
+    this.floatingSearch=new FloatingSearch(this);
     this.floatingSearch.open();
   }
   async openSearchPage() {
