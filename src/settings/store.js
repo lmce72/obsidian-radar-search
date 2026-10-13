@@ -16,7 +16,11 @@ export class SettingsStore {
     if (!raw || this.migrated) await this.persist();
     return this.settings;
   }
-  update(key,value) { this.settings[key]=validateSetting(key,value); return this.persist(); }
+  update(key,value) { return this.updateMany({[key]:value}); }
+  updateMany(changes) {
+    const validated=Object.fromEntries(Object.entries(changes).map(([key,value])=>[key,validateSetting(key,value)]));
+    Object.assign(this.settings,validated);return this.persist();
+  }
   persist() {
     const snapshot=structuredClone(this.settings);
     const operation=this.pending.catch(error=>this.plugin.report('error','上次设置保存失败',error)).then(()=>this.plugin.saveData(snapshot));

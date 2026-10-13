@@ -45,6 +45,10 @@ export default class PrimeCoreSearchPlugin extends Plugin {
     await this.store.update(key,value);
     if (refresh) await this.refreshComponents();
   }
+  async updateSettings(changes,refresh=true) {
+    await this.store.updateMany(changes);
+    if(refresh)await this.refreshComponents();
+  }
   async mount(container,owner) {
     this.unmount(container);
     const component=new SearchBarComponent(this,container);
