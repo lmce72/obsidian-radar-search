@@ -19,8 +19,8 @@ export const COLLAPSIBLE_GROUPS = new Set(["Vault 文件", "内容匹配", "命�
 // search would hide its primary results), special-search groups start collapsed.
 export const DEFAULT_EXPANDED_GROUPS = new Set(["Vault 文件"]);
 
-// 分组标题前的图标（名称均已在 iconize 索引中查实）
-// Icon shown before each collapsible group's title (names verified against the iconize index).
+// 分组标题使用 Obsidian 原生 Lucide 图标。
+// Collapsible group titles use Obsidian's native Lucide icons.
 export const GROUP_ICON = {
     "Vault 文件": "files",
     "内容匹配": "file-search",
@@ -33,10 +33,10 @@ export const GROUP_ICON = {
     "外链匹配": "external-link"
 };
 
-// 非 markdown 文件的扩展名 → Lucide 图标名（名称均已在 iconize 索引 lucide-icons.json 中查实）
+// 非 markdown 文件的扩展名 → Obsidian 原生 Lucide 图标名。
 // 未列出的扩展名一律回落 files
 // Extension → Lucide icon name for non-markdown files. Every name below was verified against the
-// iconize index (lucide-icons.json); unlisted extensions fall back to `files`.
+// built-in Lucide set; unlisted extensions fall back to `files`.
 export const EXT_ICON = {
     json: "file-json",
     js: "file-code", mjs: "file-code", cjs: "file-code", ts: "file-code", tsx: "file-code", jsx: "file-code",

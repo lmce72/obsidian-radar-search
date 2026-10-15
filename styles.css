@@ -1,0 +1,14 @@
+/* Artwork is embedded from assets/search-radar.svg by the build. */
+.primecore-search-logo {
+  display: inline-block;
+  width: var(--icon-size, 18px);
+  height: var(--icon-size, 18px);
+  flex-shrink: 0;
+  background-color: currentColor;
+  -webkit-mask: url("__PRIMECORE_SEARCH_SVG__") center / contain no-repeat;
+  mask: url("__PRIMECORE_SEARCH_SVG__") center / contain no-repeat;
+}
+.primecore-search-ribbon .svg-icon {
+  width: var(--icon-size, 18px);
+  height: var(--icon-size, 18px);
+}

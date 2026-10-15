@@ -6,22 +6,32 @@ const {DEFAULT_SETTINGS,normalizeSettings,validateSetting}=await import('../src/
 const {createSearchIndexEngine}=await import('../src/search/index-engine.js');
 const {makeTouchHandler}=await import('../src/shared/touch.js');
 
-test('configuration migration preserves every legacy key and isolates defaults',async()=>{
-  const legacy={...structuredClone(DEFAULT_SETTINGS),defaultMode:'web',searchPresets:[{name:'Example',mode:'白名单',excludeFolders:['Example'],icon:'LiFiles'}],resultGroupState:{'标签匹配':true}};
-  const normalized=normalizeSettings(legacy);
-  for(const key of Object.keys(legacy))expect(normalized[key]).toEqual(legacy[key]);
+test('normalization preserves current settings and isolates defaults',async()=>{
+  const input={...structuredClone(DEFAULT_SETTINGS),defaultMode:'web',searchPresets:[{name:'Example',mode:'白名单',excludeFolders:['Example'],icon:'files'}],resultGroupState:{'标签匹配':true}};
+  const normalized=normalizeSettings(input);
+  for(const key of Object.keys(input))expect(normalized[key]).toEqual(input[key]);
   const copy=normalizeSettings({});copy.engines[0].enabled=false;
   expect(DEFAULT_SETTINGS.engines[0].enabled).toBe(true);
 });
 
-test('settings copy legacy once, save serially and never modify source config',async()=>{
+test('settings load only plugin data and save serially',async()=>{
   const snapshots=[];
-  const plugin={app:{vault:{adapter:{exists:async()=>true,read:async()=>JSON.stringify({defaultMode:'web',searchIndex:{content:false}})}}},loadData:async()=>null,saveData:async data=>{await Promise.resolve();snapshots.push(data);},report:()=>{}};
+  const plugin={loadData:async()=>({defaultMode:'web',searchIndex:{content:false}}),saveData:async data=>{await Promise.resolve();snapshots.push(data);},report:()=>{}};
   const store=new SettingsStore(plugin);await store.load();
-  expect(store.migrated).toBe(true);expect(store.settings.defaultMode).toBe('web');
+  expect(store.settings.defaultMode).toBe('web');
   expect(store.settings.searchIndex).toEqual({enabled:true,content:false,bigrams:true,debug:false});
   await Promise.all([store.update('historyPageSize',20),store.update('dropdownPageSize',30)]);
   expect(snapshots.at(-1).historyPageSize).toBe(20);expect(snapshots.at(-1).dropdownPageSize).toBe(30);
+});
+
+test('obsolete fields are discarded without converting them into current state',async()=>{
+  const snapshots=[];
+  const store=new SettingsStore({loadData:async()=>({defaultMode:'web',expandedResultGroups:['标签匹配'],vaultContentSearchMaxFiles:15}),saveData:async data=>snapshots.push(data),report:()=>{}});
+  await store.load();
+  expect(store.settings.defaultMode).toBe('web');expect(store.settings.resultGroupState).toEqual({});
+  expect(store.settings).not.toHaveProperty('expandedResultGroups');expect(store.settings).not.toHaveProperty('vaultContentSearchMaxFiles');
+  expect(snapshots.at(-1)).toEqual(store.settings);
+  expect(()=>validateSetting('expandedResultGroups',[])).toThrow('未知设置');
 });
 
 test('reject invalid JSON settings before replacing saved configuration',()=>{

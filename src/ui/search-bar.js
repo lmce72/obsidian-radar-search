@@ -92,12 +92,9 @@ constructor(plugin, container) {
             // 下拉分组分页状态（Map: groupKey → currentPage）
             this._groupPages      = new Map();
             // 分组展开状态（标题 → 是否展开）与最近一次分组快照（供展开/收起后重渲染）
-            // 兼容早期只存「已展开专项分组数组」的 expandedResultGroups 键
             this._groupState = (cfg.resultGroupState && typeof cfg.resultGroupState === "object" && !Array.isArray(cfg.resultGroupState))
                 ? Object.assign({}, cfg.resultGroupState)
-                : (Array.isArray(cfg.expandedResultGroups)
-                    ? Object.fromEntries(cfg.expandedResultGroups.map(t => [t, true]))
-                    : {});
+                : {};
             this._lastGroups = null;
             this._dropdownPageSize = Number(cfg.dropdownPageSize) || 10;
 

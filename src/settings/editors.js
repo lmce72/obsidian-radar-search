@@ -1,6 +1,7 @@
 import { Setting, TextComponent, DropdownComponent, ToggleComponent, ButtonComponent, TFolder } from 'obsidian';
 import { IconRenderer } from '../shared/icons.js';
 import { CollectionDraft, booleanFields } from './models.js';
+import { SettingsDialog } from './dialogs.js';
 
 // Shared draft/save/reset behavior for every structured model.
 // 所有结构化模型统一使用草稿、保存与还原交互。
@@ -23,7 +24,7 @@ class ModelEditor {
     this.saveButton.setDisabled(true);this.resetButton.setDisabled(true);
     try {
       if(await this.tab.saveChanges(this.changes())) {
-        this.reset();this.render();this.setDirty(false);this.status.setText('已保存');this.tab.refreshChoices();this.tab.refreshRelatedEditors(this.key);
+        this.reset();this.render();this.setDirty(false);this.status.setText('已保存');this.tab.refreshChoices();
       } else this.setDirty();
     } catch(error) {this.setDirty();this.status.setText(error.message);}
   }
@@ -88,10 +89,16 @@ export class CollectionEditor extends ModelEditor {
     const change=value=>{row.value[field.key]=value;this.setDirty();};
     const label=`${this.draft.spec.singular} ${index+1}：${field.label}`;
     if(field.type==='fields') {
-      const details=cell.createEl('details');details.createEl('summary',{text:'标识 / 建议词'});
-      field.fields.forEach(nested=>{
-        const setting=new Setting(details).setName(nested.label);
-        this.renderCell(setting.controlEl,nested,row,index);
+      new ButtonComponent(cell).setButtonText('编辑').onClick(()=>{
+        const draft={value:structuredClone(row.value)};
+        const dialog=new SettingsDialog(this.tab.plugin,{
+          title:`${row.value.name||this.draft.spec.singular} · ${field.label}`,
+          render:parent=>field.fields.forEach(nested=>{
+            const setting=new Setting(parent).setName(nested.label);
+            this.renderScalar(setting.controlEl,nested,draft.value[nested.key],value=>{draft.value[nested.key]=value;},label+'：'+nested.label);
+          }),
+          apply:()=>{field.fields.forEach(nested=>{row.value[nested.key]=draft.value[nested.key];});this.setDirty();}
+        });dialog.open();
       });return;
     }
     if(field.type==='toggle') {
@@ -101,15 +108,30 @@ export class CollectionEditor extends ModelEditor {
       const control=new DropdownComponent(cell).addOptions(field.options).setValue(row.value[field.key]).onChange(change);control.selectEl.setAttribute('aria-label',label);return;
     }
     if(field.type==='paths') {
-      const details=cell.createEl('details');const summary=details.createEl('summary',{text:`编辑路径（${row.value[field.key].length}）`});
-      new StringListEditor(details,{value:row.value[field.key],folders:this.folders(),onChange:value=>{change(value);summary.setText(`编辑路径（${value.length}）`);}});return;
+      const button=new ButtonComponent(cell).setButtonText(`编辑路径（${row.value[field.key].length}）`);
+      button.onClick(()=>{
+        let draft=structuredClone(row.value[field.key]);
+        const dialog=new SettingsDialog(this.tab.plugin,{
+          title:`${row.value.name||'搜索预设'} · 路径`,
+          render:parent=>new StringListEditor(parent,{value:draft,folders:this.folders(),onChange:value=>{draft=value;}}),
+          apply:()=>{
+            const paths=draft.map(path=>path.trim());
+            if(paths.some(path=>!path))throw new Error('请填写路径或删除空行。');
+            if(new Set(paths).size!==paths.length)throw new Error('路径重复，请合并或删除。');
+            change(paths);button.setButtonText(`编辑路径（${paths.length}）`);
+          }
+        });dialog.open();
+      });return;
     }
+    this.renderScalar(cell,field,row.value[field.key],change,label);
+  }
+  renderScalar(cell,field,value,change,label) {
     let preview;
-    const control=new TextComponent(cell).setValue(row.value[field.key]||'').setPlaceholder(field.placeholder).onChange(value=>{change(value);if(preview)IconRenderer.setIcon(preview,value,16);});
+    const control=new TextComponent(cell).setValue(value||'').setPlaceholder(field.placeholder).onChange(next=>{change(next);if(preview)IconRenderer.setIcon(preview,next,16);});
     control.inputEl.setAttribute('aria-label',label);control.inputEl.title=field.placeholder;
     control.inputEl.style.minWidth=field.key==='url'||field.key==='suggest'?'220px':'120px';
     if(field.key==='url'||field.key==='suggest')control.inputEl.type='url';
-    if(field.type==='icon') {preview=cell.createSpan();IconRenderer.setIcon(preview,row.value[field.key],16);}
+    if(field.type==='icon') {preview=cell.createSpan();IconRenderer.setIcon(preview,value,16);}
   }
 }
 export class BooleanModelEditor extends ModelEditor {
@@ -119,9 +141,7 @@ export class BooleanModelEditor extends ModelEditor {
     this.fields.forEach(field=>{if(this.value[field.key]===undefined)this.value[field.key]=field.default;});
   }
   changes() {
-    const changes={[this.key]:structuredClone(this.value)};
-    if(this.key==='resultGroupState')changes.expandedResultGroups=Object.entries(this.value).filter(([,expanded])=>expanded).map(([name])=>name);
-    return changes;
+    return {[this.key]:structuredClone(this.value)};
   }
   render() {
     this.body.empty();this.fields.forEach(field=>new Setting(this.body).setName(field.label).setDesc(field.description).addToggle(control=>control.setValue(this.value[field.key]).onChange(value=>{this.value[field.key]=value;this.setDirty();})));

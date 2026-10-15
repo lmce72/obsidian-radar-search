@@ -27,8 +27,7 @@ export const MODEL_SPECS = {
       {key:'icon',label:'图标',type:'icon',placeholder:'例如：folder、book-open'}
     ]
   },
-  excludePaths:{singular:'路径',strings:true,placeholder:'例如：Projects/Archive（仓库内路径）',create:()=>''},
-  expandedResultGroups:{singular:'分组',strings:true,options:Object.fromEntries([...COLLAPSIBLE_GROUPS].map(name=>[name,name])),create:()=> 'Vault 文件'}
+  excludePaths:{singular:'路径',strings:true,placeholder:'例如：Projects/Archive（仓库内路径）',create:()=>''}
 };
 export const INDEX_FIELDS = [
   {key:'enabled',label:'启用搜索索引',description:'在后台建立索引，减少逐次扫描文件。',default:true},
@@ -83,11 +82,6 @@ export class CollectionDraft {
     if(this.key==='engines'&&settings.activeEngineId) {
       const index=this.rows.findIndex(row=>row.original?.id===settings.activeEngineId);
       changes.activeEngineId=index<0?null:value[index].id;
-    }
-    if(this.key==='expandedResultGroups') {
-      const groups={...settings.resultGroupState};
-      for(const name of new Set([...COLLAPSIBLE_GROUPS,...settings.expandedResultGroups,...value]))groups[name]=value.includes(name);
-      changes.resultGroupState=groups;
     }
     return changes;
   }

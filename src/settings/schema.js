@@ -3,7 +3,7 @@ export const DEFAULT_SETTINGS = {
   placeholder_global: '', placeholder_vault: '', placeholder_web: '',
   browserTarget: 'external', historyRetentionMode: 'forever', historyRetentionDays: 30,
   historyPageSize: 8, dropdownPageSize: 10, searchSheetBreakpoint: 768,
-  vaultContentSearch: true, vaultContentSearchMaxFiles: 15, vaultContentSearchMaxResults: 10,
+  vaultContentSearch: true, vaultContentSearchMaxResults: 10,
   searchWikiLinks: false, searchMdLinks: false, searchBookmarks: false, searchTags: true,
   searchCommands: true, searchNonMarkdown: false, searchProperties: false, extendedContext: true,
   vaultSortMode: 'relevance', limitContentResults: false, searchPresets: [], defaultPreset: '',
@@ -19,7 +19,7 @@ export const DEFAULT_SETTINGS = {
     {id:'duckduckgo',name:'DuckDuckGo',url:'https://duckduckgo.com/?q={q}',suggest:'https://duckduckgo.com/ac/?q={q}&type=list',enabled:false},
     {id:'perplexity',name:'Perplexity AI',url:'https://www.perplexity.ai/search?q={q}',suggest:'',enabled:false}
   ],
-  expandedResultGroups: [], resultGroupState: {},
+  resultGroupState: {},
   searchIndex: {enabled:true,content:true,bigrams:true,debug:false}, debug:false
 };
 
@@ -40,7 +40,7 @@ export function validateSetting(key, value) {
   if (typeof fallback === 'number' && (!Number.isInteger(value) || value < 1 || value > 100000)) throw new Error('请输入 1–100000 的整数');
   if (typeof fallback === 'string' && typeof value !== 'string') throw new Error('需要文本');
   if (Array.isArray(fallback) && !Array.isArray(value)) throw new Error('需要 JSON 数组');
-  if (['excludePaths','expandedResultGroups'].includes(key) && !value.every(item=>typeof item==='string')) throw new Error('每项必须是文本');
+  if (key==='excludePaths' && !value.every(item=>typeof item==='string')) throw new Error('每项必须是文本');
   if (key==='engines') {
     const ids = new Set();
     for (const item of value) {
@@ -65,6 +65,5 @@ export function normalizeSettings(input, onInvalid = () => {}) {
     try { result[key]=validateSetting(key,input[key]); } catch (error) { onInvalid(key,error); }
   }
   result.searchIndex={...DEFAULT_SETTINGS.searchIndex,...result.searchIndex};
-  if (!input?.resultGroupState && Array.isArray(input?.expandedResultGroups)) result.resultGroupState=Object.fromEntries(result.expandedResultGroups.map(name=>[name,true]));
   return result;
 }

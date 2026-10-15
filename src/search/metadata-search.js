@@ -31,12 +31,10 @@ _bookmarkIconName(item) {
             return "bookmark";
         }
 
-_iconizeIconName() { return null; }
-
 _fileIconName(file) {
             try {
                 if (!file || !file.path) return "files";
-                if (file.extension === "md") return this._iconizeIconName(file) || "files";
+                if (file.extension === "md") return "files";
                 return EXT_ICON[String(file.extension || "").toLowerCase()] || "files";
             } catch (e) {
                 this._log("error", "[SearchBar] 解析文件图标失败:", e);
@@ -124,7 +122,7 @@ _buildCommandItems(q, terms, _fuzzyFn, limit = 8, list = null) {
                         label: nm,
                         sub: id,
                         twoLine: true,
-                        icon: "command",   // 双行条目的前置图标（Lucide command，已在 iconize 索引中查实）
+                        icon: "command",   // 使用 Obsidian 原生 Lucide command 图标。
                         terms,
                         trailing: { icon: "copy", title: "复制命令 id", onClick: () => this._copyCommandId(id) },
                         action: () => this._runCommand(id, nm)

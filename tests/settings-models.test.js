@@ -2,6 +2,7 @@ import {test,expect} from 'bun:test';
 import {CollectionDraft,booleanFields} from '../src/settings/models.js';
 import {DEFAULT_SETTINGS} from '../src/settings/schema.js';
 import {SettingsStore} from '../src/settings/store.js';
+import {SETTINGS_GROUPS,VAULT_OPTION_KEYS} from '../src/settings/fields.js';
 
 test('rename selected preset preserves its default reference and nested paths',()=>{
   const settings=structuredClone(DEFAULT_SETTINGS);
@@ -31,10 +32,15 @@ test('group editor includes default groups and preserves custom keys',()=>{
   const fields=booleanFields('resultGroupState',{'Custom group':true});
   expect(fields.some(field=>field.key==='Vault 文件'&&field.default)).toBe(true);
   expect(fields.some(field=>field.key==='Custom group')).toBe(true);
-  const settings=structuredClone(DEFAULT_SETTINGS);
-  const draft=new CollectionDraft('expandedResultGroups',['标签匹配']);
-  expect(draft.changes(settings).resultGroupState['标签匹配']).toBe(true);
-  expect(draft.changes(settings).resultGroupState['Vault 文件']).toBe(false);
+});
+test('consolidated settings keep every current field reachable exactly once',()=>{
+  const main=SETTINGS_GROUPS.flatMap(([,keys])=>keys);
+  expect(main).toContain('vaultOptions');
+  expect(VAULT_OPTION_KEYS).toHaveLength(13);
+  expect(main.filter(key=>VAULT_OPTION_KEYS.includes(key))).toHaveLength(0);
+  const all=main.filter(key=>key!=='vaultOptions').concat(VAULT_OPTION_KEYS);
+  expect(new Set(all).size).toBe(all.length);
+  expect([...all].sort()).toEqual(Object.keys(DEFAULT_SETTINGS).sort());
 });
 test('batch validates every field before mutating and persists related values together',async()=>{
   const saved=[];const store=new SettingsStore({saveData:async value=>saved.push(value),report:()=>{}});store.settings=structuredClone(DEFAULT_SETTINGS);
