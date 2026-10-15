@@ -58,7 +58,7 @@ Vault 与全局模式输入后延迟 200ms 自动搜索。内容、标签、链�
 
 ## 开发
 
-源码、构建脚本和测试均使用 TypeScript，需要 Bun 1.3+，运行需 Obsidian 1.6.6+。开发依赖包括 TypeScript 与 Obsidian 类型，运行时 Obsidian API 由宿主提供。
+源码、构建脚本和测试均使用 TypeScript，需要 Bun 1.3+，运行需 Obsidian 1.7.2+，以支持等待延迟页面加载完成的 revealLeaf API。开发依赖包括 TypeScript、Obsidian 类型与 ESLint，运行时 Obsidian API 由宿主提供。
 
 ```sh
 bun install --frozen-lockfile

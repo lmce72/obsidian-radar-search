@@ -8,7 +8,7 @@ import { makeTouchHandler } from '../shared/touch.ts';
 export const withInteractions = Base => class extends Base {
 _mkTrailingBtn(itemEl, item) {
             const btn = itemEl.createEl("button");
-            Object.assign(btn.style, {
+            btn.setCssStyles({
                 flexShrink: "0", display: "inline-flex", alignItems: "center", justifyContent: "center",
                 width: "24px", height: "24px", borderRadius: "5px",
                 border: "none", background: "transparent", color: "var(--text-muted)",
@@ -16,8 +16,8 @@ _mkTrailingBtn(itemEl, item) {
             });
             if (item.trailing.icon) this._setIcon(btn, item.trailing.icon, 13);
             if (item.trailing.title) btn.setAttribute("aria-label", item.trailing.title);
-            this._listen(btn, "mouseenter", () => { btn.style.background = "var(--background-modifier-hover)"; btn.style.color = "var(--text-normal)"; });
-            this._listen(btn, "mouseleave", () => { btn.style.background = "transparent"; btn.style.color = "var(--text-muted)"; });
+            this._listen(btn, "mouseenter", () => { btn.setCssStyles({background: "var(--background-modifier-hover)"}); btn.setCssStyles({color: "var(--text-normal)"}); });
+            this._listen(btn, "mouseleave", () => { btn.setCssStyles({background: "transparent"}); btn.setCssStyles({color: "var(--text-muted)"}); });
             this._listen(btn, "mousedown", (e) => { e.stopPropagation(); e.preventDefault(); });
             const handler = this._makeTouchHandler((e) => { e.stopPropagation(); item.trailing.onClick(); });
             this._listen(btn, "touchstart", handler.onTouchStart, { passive: true });
@@ -32,7 +32,7 @@ _refreshContentToggleStatus() {
                 const el = this._contentStatusEl;
                 if (el.empty) el.empty(); else while (el.firstChild) el.removeChild(el.firstChild);
                 const sep = this._contentStatusSep;
-                const hideSep = () => { if (sep) sep.style.display = "none"; };
+                const hideSep = () => { if (sep) sep.setCssStyles({display: "none"}); };
                 // web 模式下按钮表示所选搜索引擎，不显示 vault 专项搜索状态
                 if (this._mode === "web") { hideSep(); return; }
                 // 顺序与选项面板「专项搜索」组一致
@@ -50,12 +50,12 @@ _refreshContentToggleStatus() {
                 for (const [on, icon] of items) {
                     if (!on) continue;
                     const s = el.createSpan();
-                    Object.assign(s.style, { display: "inline-flex", alignItems: "center" });
+                    s.setCssStyles({ display: "inline-flex", alignItems: "center" });
                     this._setIcon(s, icon, PILL_ICON_SIZE);   // 与 pill 三个按钮同尺寸
                     shown++;
                 }
                 // 仅在右侧确有状态图标时才显示分隔符（全关时不留下悬空的竖线）
-                if (sep) sep.style.display = shown > 0 ? "inline-block" : "none";
+                if (sep) sep.setCssStyles({display: shown > 0 ? "inline-block" : "none"});
             } catch (e) {
                 this._log("error", "[SearchBar] 刷新按钮状态图标失败:", e);
             }

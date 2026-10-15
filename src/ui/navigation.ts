@@ -122,13 +122,13 @@ _showDropdown() {
                 this._closeScopeMenu();
                 this._closePanel({ restoreDropdown: false });
             }
-            this._dropdown.style.display = this.presentation==='page'?'block':'flex';
+            this._dropdown.setCssStyles({display: this.presentation==='page'?'block':'flex'});
             if(this.presentation!=='page') {this._raiseFloat(this._dropdown);this._repositionFloats();this._startReposition();}
         }
 
 _hideDropdown() {
             if(this.presentation==='page'&&this._resultKind==='results'&&this._input.value.trim())return;
-            this._dropdown.style.display = "none";
+            this._dropdown.setCssStyles({display: "none"});
             this._activeIdx = -1;
             this._itemEls = [];
             // 面板和 scopeMenu 均关闭时才停止 rAF 循环
@@ -139,13 +139,13 @@ _hideDropdown() {
 
 _raiseFloat(el) {
             if (!el) return;
-            el.style.zIndex = String(9100 + (++this._zCounter));
+            el.setCssStyles({zIndex: String(9100 + (++this._zCounter))});
         }
 
 _syncClearBtn() {
             if (!this._clearBtn) return;
             const hasValue = this._input.value.length > 0;
-            this._clearBtn.style.display = hasValue ? "inline-flex" : "none";
+            this._clearBtn.setCssStyles({display: hasValue ? "inline-flex" : "none"});
         }
 
 _startReposition() {
@@ -192,12 +192,12 @@ _repositionFloats() {
             const vh     = window.innerHeight;
 
             if(this.presentation!=='page'&&this._dropdown.style.display!=='none') {
-                this._dropdown.style.display='flex';this._dropdown.style.flexDirection='column';
+                this._dropdown.setCssStyles({display: 'flex'});this._dropdown.setCssStyles({flexDirection: 'column'});
                 const header=this._dropdown.firstElementChild;
                 const natural=(header?.scrollHeight||0)+this._dropdownInner.scrollHeight+2;
                 positionFloatingElement(this._dropdown,rect,Math.max(rect.width,240),natural);
-                this._dropdownInner.style.maxHeight='none';this._dropdownInner.style.minHeight='0';
-                this._dropdownInner.style.flex='1 1 auto';this._dropdownInner.style.overflowY='auto';
+                this._dropdownInner.setCssStyles({maxHeight: 'none'});this._dropdownInner.setCssStyles({minHeight: '0'});
+                this._dropdownInner.setCssStyles({flex: '1 1 auto'});this._dropdownInner.setCssStyles({overflowY: 'auto'});
             }
 
             // ── 模式切换菜单（底部卡片形态下由 _applyScopeMenuPresentation 定格，不锚定）──
@@ -211,7 +211,7 @@ _repositionFloats() {
                 const sTop = (sBelowTop + mH < vh - MARGIN)
                     ? sBelowTop
                     : Math.max(MARGIN, bR.top - GAP - mH);
-                Object.assign(this._scopeMenu.style, {
+                this._scopeMenu.setCssStyles({
                     top:  sTop + "px",
                     left: sLeft + "px"
                 });
@@ -232,8 +232,8 @@ _prepBar(kind) {
                 if(isHistory)el.empty();
                 this._resultKind=kind;this._syncResultTools(isHistory);
                 // 右区按钮显隐：清除历史只在历史视图；在 Obsidian 打开只在结果视图（历史视图里没有查询词）
-                if (this._clearHistoryBtn) this._clearHistoryBtn.style.display = "none";
-                if (this._cornerBtnEl) this._cornerBtnEl.style.display = isHistory || this.presentation==='page' ? "none" : "flex";
+                if (this._clearHistoryBtn) this._clearHistoryBtn.setCssStyles({display: "none"});
+                if (this._cornerBtnEl) this._cornerBtnEl.setCssStyles({display: isHistory || this.presentation==='page' ? "none" : "flex"});
                 if(isHistory) {el.removeClass('primecore-result-tabs');el.removeAttribute('role');el.removeAttribute('aria-label');this._dropdownInner.removeAttribute('role');}
                 else this._dropdownInner.setAttribute('role','tabpanel');
                 if (isHistory) {

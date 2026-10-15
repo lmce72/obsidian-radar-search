@@ -10,6 +10,6 @@ export class IconRenderer {
     const name = this.name(value);
     setIcon(element, getIcon(name) ? name : 'files');
     const svg = element.querySelector('svg');
-    if (svg && size) { svg.style.setProperty('width', `${size}px`); svg.style.setProperty('height', `${size}px`); }
+    if (svg && size) svg.setCssStyles({width:`${size}px`,height:`${size}px`});
   }
 }

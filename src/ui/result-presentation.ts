@@ -27,8 +27,8 @@ export const withResultPresentation=Base=>class extends Base {
     if(session.query)await this._doSearch(session.query);
   }
   _syncSearchAction() {
-    this._goBtn.style.display=this._mode==='web'?'flex':'none';
-    if(this._panelQuickFilterButton)this._panelQuickFilterButton.buttonEl.style.display=this._mode==='web'?'none':'inline-flex';
+    this._goBtn.setCssStyles({display: this._mode==='web'?'flex':'none'});
+    if(this._panelQuickFilterButton)this._panelQuickFilterButton.buttonEl.setCssStyles({display: this._mode==='web'?'none':'inline-flex'});
     this._goBtn.setAttribute('aria-label','搜索互联网');
   }
   _openResultsPage() {

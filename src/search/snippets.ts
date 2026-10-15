@@ -35,7 +35,7 @@ _highlightText(container, text, terms) {
             for (const { start, end } of merged) {
                 if (start > cursor) container.appendText(text.slice(cursor, start));
                 const mark = container.createSpan({ text: text.slice(start, end) });
-                Object.assign(mark.style, {
+                mark.setCssStyles({
                     background: `rgba(${rgb}, 0.25)`,
                     color: `rgb(${rgb})`,
                     borderRadius: "2px",

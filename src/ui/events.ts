@@ -50,12 +50,12 @@ _themeUpdate() {
             const rgb = this._getSeasonRgb();
             if (this._input) {
                 this._syncInputBorder();
-                this._input.style.color = `rgb(${rgb})`;
+                this._input.setCssStyles({color: `rgb(${rgb})`});
             }
             [this._scopeBtn, this._goBtn].forEach(btn => {
                 if (btn) {
-                    btn.style.color = `rgb(${rgb})`;
-                    btn.style.borderColor = `rgba(${rgb}, 0.4)`;
+                    btn.setCssStyles({color: `rgb(${rgb})`});
+                    btn.setCssStyles({borderColor: `rgba(${rgb}, 0.4)`});
                 }
             });
             // 搜索选项按钮跟随主题色
@@ -121,13 +121,13 @@ _bindEvents() {
                 this._hideDropdown();
                 this._applyScopeMenuPresentation();
                 if (this._bottomSheet) {
-                    Object.assign(this._scopeMenu.style, { display: "flex", flexDirection: "column" });
+                    this._scopeMenu.setCssStyles({ display: "flex", flexDirection: "column" });
                     this._syncMask(true);
                     this._raiseFloat(this._scopeMenu);
                     return;
                 }
                 const inputRect = this._input.getBoundingClientRect();
-                Object.assign(this._scopeMenu.style, {
+                this._scopeMenu.setCssStyles({
                     top: (inputRect.bottom + 6) + "px",
                     left: inputRect.left + "px",
                     display: "flex",
@@ -164,12 +164,12 @@ _bindEvents() {
                     this._refreshPanelForMode(this._mode);
                     this._syncMask(true);
                     this._raiseFloat(this._vaultSearchPanel);
-                    this._vaultSearchPanel.style.display = "block";
+                    this._vaultSearchPanel.setCssStyles({display: "block"});
                     return;
                 }
                 const btnRect = this._contentToggleBtn.getBoundingClientRect();
                 // 与 _repositionFloats 保持一致：左缘对齐按钮左缘（避免出现一帧的右对齐闪烁）
-                Object.assign(this._vaultSearchPanel.style, {
+                this._vaultSearchPanel.setCssStyles({
                     top:   (btnRect.bottom + 6) + "px",
                     left:  btnRect.left + "px",
                     right: "auto",

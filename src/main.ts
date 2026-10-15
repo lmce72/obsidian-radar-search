@@ -117,6 +117,5 @@ export default class RadarSearchPlugin extends Plugin {
     this.floatingSearch?.close();
     for (const container of [...this.components.keys()]) this.unmount(container);
     this.indexEngine?.dispose();
-    this.app.workspace.detachLeavesOfType(VIEW_TYPE);
   }
 }

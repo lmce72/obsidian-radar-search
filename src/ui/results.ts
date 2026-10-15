@@ -17,7 +17,7 @@ _mkPagerBar(parent, opts) {
             try {
                 const o = opts || {};
                 const bar = parent.createDiv();
-                Object.assign(bar.style, {
+                bar.setCssStyles({
                     position: o.sticky === false ? "static" : "sticky",
                     bottom: "0",
                     display: "flex",
@@ -33,7 +33,7 @@ _mkPagerBar(parent, opts) {
 
                 // 每页条数（数字框 + 确认）
                 const sizeInput = createEl("input", { type: "number" });
-                Object.assign(sizeInput.style, {
+                sizeInput.setCssStyles({
                     width: "52px", height: "26px", borderRadius: "100px",
                     border: "1px solid var(--background-modifier-border)",
                     background: "var(--background-secondary)", color: "var(--text-normal)",
@@ -47,17 +47,17 @@ _mkPagerBar(parent, opts) {
                 this._listen(sizeInput, "touchstart", (e) => e.stopPropagation(), { passive: true });
 
                 const checkBtn = createEl("button");
-                Object.assign(checkBtn.style, {
+                checkBtn.setCssStyles({
                     width: "26px", height: "26px", borderRadius: "100px", border: "none",
                     background: "var(--interactive-accent)", color: "var(--text-on-accent)",
                     cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center",
                     padding: "0", flexShrink: "0", transition: "opacity 0.12s", touchAction: "manipulation"
                 });
                 const checkIconSpan = checkBtn.createSpan();
-                Object.assign(checkIconSpan.style, { display: "inline-flex", alignItems: "center", pointerEvents: "none" });
+                checkIconSpan.setCssStyles({ display: "inline-flex", alignItems: "center", pointerEvents: "none" });
                 this._setIcon(checkIconSpan, "check", 13);
-                this._listen(checkBtn, "mouseenter", () => { checkBtn.style.opacity = "0.85"; });
-                this._listen(checkBtn, "mouseleave", () => { checkBtn.style.opacity = "1"; });
+                this._listen(checkBtn, "mouseenter", () => { checkBtn.setCssStyles({opacity: "0.85"}); });
+                this._listen(checkBtn, "mouseleave", () => { checkBtn.setCssStyles({opacity: "1"}); });
                 const _applySize = (e) => {
                     const n = Math.max(1, parseInt(sizeInput.value, 10) || o.pageSize || 8);
                     sizeInput.value = String(n);
@@ -71,7 +71,7 @@ _mkPagerBar(parent, opts) {
 
                 // 页码信息
                 const infoEl = bar.createSpan({ text: `第 ${o.page} / ${o.totalPages} 页` });
-                Object.assign(infoEl.style, {
+                infoEl.setCssStyles({
                     fontSize: "11px", color: "var(--text-muted)",
                     flexGrow: "1", textAlign: "center", whiteSpace: "nowrap"
                 });
@@ -81,10 +81,10 @@ _mkPagerBar(parent, opts) {
                 const nextBtn = this._mkNavBtn("chevron-right");
                 prevBtn.disabled = o.page <= 1;
                 nextBtn.disabled = o.page >= o.totalPages;
-                prevBtn.style.opacity = prevBtn.disabled ? "0.3" : "1";
-                nextBtn.style.opacity = nextBtn.disabled ? "0.3" : "1";
-                prevBtn.style.cursor = prevBtn.disabled ? "default" : "pointer";
-                nextBtn.style.cursor = nextBtn.disabled ? "default" : "pointer";
+                prevBtn.setCssStyles({opacity: prevBtn.disabled ? "0.3" : "1"});
+                nextBtn.setCssStyles({opacity: nextBtn.disabled ? "0.3" : "1"});
+                prevBtn.setCssStyles({cursor: prevBtn.disabled ? "default" : "pointer"});
+                nextBtn.setCssStyles({cursor: nextBtn.disabled ? "default" : "pointer"});
                 // stopPropagation 必不可少：翻页会重建下拉内容，节点在处理中脱离文档时，
                 // 文档级「点击外部关闭」会误判为外部点击而收起下拉
                 const prevHandler = this._makeTouchHandler((e) => { e.stopPropagation(); e.preventDefault(); if (!prevBtn.disabled && o.onPrev) o.onPrev(); });
@@ -146,14 +146,14 @@ _renderDropdown(groups) {
                     if (item.hits) {
                         // ── 可折叠内容命中组 ───────────────────────────────────
                         const headerRow = itemEl.createDiv();
-                        Object.assign(headerRow.style, {
+                        headerRow.setCssStyles({
                             display: "flex", alignItems: "center", gap: "6px",
                             padding: "7px 14px", minHeight: "36px", userSelect: "none", cursor: "pointer"
                         });
                         // 文件类型图标（内容匹配组：两行标题 + 下方可展开的内容块）
                         if (item.icon) {
                             const fileIconEl = headerRow.createSpan();
-                            Object.assign(fileIconEl.style, {
+                            fileIconEl.setCssStyles({
                                 display: "inline-flex", alignItems: "center", flexShrink: "0",
                                 color: "var(--text-muted)", width: "16px"
                             });
@@ -161,47 +161,47 @@ _renderDropdown(groups) {
                         }
                         const chevronEl = headerRow.createSpan();
                         this._setIcon(chevronEl, "chevron-right", 12);
-                        Object.assign(chevronEl.style, {
+                        chevronEl.setCssStyles({
                             flexShrink: "0", color: "var(--text-muted)",
                             transition: "transform 0.15s", display: "flex", alignItems: "center"
                         });
                         // 与其它条目一致：上行文件名、下行路径；下方仍保留可展开的内容块
                         const contentColEl = headerRow.createDiv();
-                        Object.assign(contentColEl.style, {
+                        contentColEl.setCssStyles({
                             display: "flex", flexDirection: "column", flex: "1 1 0%", minWidth: "0"
                         });
                         const labelEl = contentColEl.createSpan();
-                        Object.assign(labelEl.style, {
+                        labelEl.setCssStyles({
                             fontSize: "13px", color: "var(--text-normal)",
                             overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap"
                         });
                         this._highlightText(labelEl, item.label, item.terms);
                         if (item.sub) {
                             const dirEl = contentColEl.createSpan({ text: item.sub });
-                            Object.assign(dirEl.style, {
+                            dirEl.setCssStyles({
                                 fontSize: "11px", color: "var(--text-faint)", marginTop: "1px",
                                 overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap"
                             });
                             dirEl.title = item.sub;
                         }
                         const badgeEl = headerRow.createSpan({ text: `${item.hits.length}` });
-                        Object.assign(badgeEl.style, {
+                        badgeEl.setCssStyles({
                             flexShrink: "0", fontSize: "10px", padding: "1px 5px",
                             borderRadius: "8px", background: "var(--background-modifier-border)", color: "var(--text-muted)"
                         });
                         const hitsContainer = itemEl.createDiv();
-                        Object.assign(hitsContainer.style, {
+                        hitsContainer.setCssStyles({
                             // 左内边距对齐标题列起点：header 左 14 + 图标 16 + 间距 6 + chevron 12 + 间距 6
                             display: "none", flexDirection: "column", gap: "2px", padding: "0 14px 6px 54px"
                         });
                         for (const snippet of item.hits) {
                             const snippetEl = hitsContainer.createDiv();
-                            Object.assign(snippetEl.style, {
+                            snippetEl.setCssStyles({
                                 fontSize: "11px", color: "var(--text-faint)", padding: "3px 6px",
                                 borderRadius: "4px", lineHeight: "1.4", cursor: "pointer", transition: "background 0.1s"
                             });
-                            this._listen(snippetEl, "mouseenter", () => { snippetEl.style.background = "var(--background-modifier-hover)"; });
-                            this._listen(snippetEl, "mouseleave", () => { snippetEl.style.background = "transparent"; });
+                            this._listen(snippetEl, "mouseenter", () => { snippetEl.setCssStyles({background: "var(--background-modifier-hover)"}); });
+                            this._listen(snippetEl, "mouseleave", () => { snippetEl.setCssStyles({background: "transparent"}); });
                             this._highlightText(snippetEl, snippet.text, item.terms);
                             snippetEl.setAttribute("role","button");snippetEl.tabIndex=0;
                             const openMatch=()=>{if(item.onMatch)item.onMatch(snippet);else item.action();this._hideDropdown();};
@@ -213,7 +213,7 @@ _renderDropdown(groups) {
                             this._listen(snippetEl, "click", e => { e.stopPropagation(); openMatch(); });
                         }
                         let _expanded = false;
-                        const _toggle = e => { e.stopPropagation(); _expanded = !_expanded; hitsContainer.style.display = _expanded ? "flex" : "none"; chevronEl.style.transform = _expanded ? "rotate(90deg)" : ""; };
+                        const _toggle = e => { e.stopPropagation(); _expanded = !_expanded; hitsContainer.setCssStyles({display: _expanded ? "flex" : "none"}); chevronEl.setCssStyles({transform: _expanded ? "rotate(90deg)" : ""}); };
                         this._listen(headerRow, "mouseenter", () => this._setActive(idx));
                         this._listen(headerRow, "mouseleave", () => this._clearActive(idx));
                         this._listen(headerRow, "mousedown", e => e.preventDefault());
@@ -228,32 +228,32 @@ _renderDropdown(groups) {
                         this._listen(itemEl, "click", () => { item.action(); this._hideDropdown(); });
                     } else if (item.twoLine) {
                         // ── 双行条目（命令面板等）：前置图标 + 主标题 + 副标题 + 可选行尾按钮 ──
-                        Object.assign(itemEl.style, {
+                        itemEl.setCssStyles({
                             display: "flex", flexDirection: "row", alignItems: "center", gap: "8px",
                             padding: "7px 14px", cursor: "pointer",
                             transition: "background 0.1s", minHeight: "36px", background: "transparent"
                         });
                         if (item.icon) {
                             const iconWrapEl = itemEl.createSpan();
-                            Object.assign(iconWrapEl.style, {
+                            iconWrapEl.setCssStyles({
                                 display: "inline-flex", alignItems: "center", flexShrink: "0",
                                 color: "var(--text-muted)", width: "16px"
                             });
                             this._setIcon(iconWrapEl, item.icon, 13);
                         }
                         const contentEl = itemEl.createDiv();
-                        Object.assign(contentEl.style, {
+                        contentEl.setCssStyles({
                             display: "flex", flexDirection: "column", flex: "1 1 0%", minWidth: "0"
                         });
                         const labelEl = contentEl.createSpan();
-                        Object.assign(labelEl.style, {
+                        labelEl.setCssStyles({
                             fontSize: "13px", color: "var(--text-normal)",
                             overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap"
                         });
                         if (item.terms) { this._highlightText(labelEl, item.label, item.terms); } else { labelEl.appendText(item.label); }
                         if (item.sub) {
                             const subEl = contentEl.createSpan();
-                            Object.assign(subEl.style, {
+                            subEl.setCssStyles({
                                 fontSize: "11px", color: "var(--text-faint)", marginTop: "1px",
                                 overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap"
                             });
@@ -270,13 +270,13 @@ _renderDropdown(groups) {
                         this._listen(itemEl, "click", () => { item.action(); this._hideDropdown(); });
                     } else {
                         // ── 普通 item ──────────────────────────────────────────
-                        Object.assign(itemEl.style, {
+                        itemEl.setCssStyles({
                             display: "flex", alignItems: "center",
                             justifyContent: "space-between",
                             padding: "7px 14px", minHeight: "36px"
                         });
                         const labelEl = itemEl.createSpan();
-                        Object.assign(labelEl.style, {
+                        labelEl.setCssStyles({
                             fontSize: "13px", color: "var(--text-normal)",
                             overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
                             flex: "1", minWidth: "0"
@@ -284,7 +284,7 @@ _renderDropdown(groups) {
                         if (item.terms) { this._highlightText(labelEl, item.label, item.terms); } else { labelEl.appendText(item.label); }
                         if (item.sub) {
                             const subEl = itemEl.createSpan();
-                            Object.assign(subEl.style, {
+                            subEl.setCssStyles({
                                 fontSize: "11px", color: "var(--text-faint)",
                                 overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
                                 flexShrink: "0", marginLeft: "8px", maxWidth: "45%", textAlign: "right"
@@ -332,17 +332,17 @@ _setActive(idx) {
             this._clearActiveAll();
             this._activeIdx = idx;
             if (this._itemEls[idx]) {
-                this._itemEls[idx].style.background = "var(--background-modifier-hover)";
+                this._itemEls[idx].setCssStyles({background: "var(--background-modifier-hover)"});
             }
         }
 
 _clearActive(idx) {
             if (this._activeIdx === idx) this._activeIdx = -1;
-            if (this._itemEls[idx]) this._itemEls[idx].style.background = "transparent";
+            if (this._itemEls[idx]) this._itemEls[idx].setCssStyles({background: "transparent"});
         }
 
 _clearActiveAll() {
-            this._itemEls.forEach(el => { el.style.background = "transparent"; });
+            this._itemEls.forEach(el => { el.setCssStyles({background: "transparent"}); });
             this._activeIdx = -1;
         }
 

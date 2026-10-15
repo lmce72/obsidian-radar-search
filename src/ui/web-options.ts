@@ -16,7 +16,7 @@ export const withWebOptions = Base => class extends Base {
 _buildWebOptionsSection(container, rgb) {
             const _mkGrid = (parent) => {
                 const g = parent.createDiv();
-                Object.assign(g.style, {
+                g.setCssStyles({
                     display: "grid",
                     gridTemplateColumns: "1fr auto",
                     gap: "8px 14px",
@@ -29,14 +29,14 @@ _buildWebOptionsSection(container, rgb) {
             // Row: optional icon + label + control (icon follows the panel's existing 13px scale).
             const _row = (grid, labelText, controlEl, iconName = undefined) => {
                 const wrap = grid.createSpan();
-                Object.assign(wrap.style, { display: "inline-flex", alignItems: "center", gap: "7px", minWidth: "0" });
+                wrap.setCssStyles({ display: "inline-flex", alignItems: "center", gap: "7px", minWidth: "0" });
                 if (iconName) {
                     const ic = wrap.createSpan();
-                    Object.assign(ic.style, { display: "inline-flex", alignItems: "center", flexShrink: "0", color: "var(--text-muted)" });
+                    ic.setCssStyles({ display: "inline-flex", alignItems: "center", flexShrink: "0", color: "var(--text-muted)" });
                     this._setIcon(ic, iconName, 13);
                 }
                 const lbl = wrap.createSpan({ text: labelText });
-                Object.assign(lbl.style, {
+                lbl.setCssStyles({
                     fontSize: "13px", color: "var(--text-normal)", userSelect: "none",
                     overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap"
                 });
@@ -46,7 +46,7 @@ _buildWebOptionsSection(container, rgb) {
             // ── Section 0：搜索引擎选择器（需求3）──────────────────────────
             this._mkSectionLabel(container, "搜索引擎");
             const engineRow = container.createDiv();
-            Object.assign(engineRow.style, {
+            engineRow.setCssStyles({
                 display: "flex", flexWrap: "wrap", gap: "6px", padding: "10px 14px"
             });
             this._engineRowEl = engineRow;
@@ -55,7 +55,7 @@ _buildWebOptionsSection(container, rgb) {
             const enabledEngines = (this.cfg.engines || []).filter(e => e.enabled);
             enabledEngines.forEach(eng => {
                 const chip = engineRow.createEl("button");
-                Object.assign(chip.style, {
+                chip.setCssStyles({
                     fontSize: "12px", padding: "3px 10px", borderRadius: "100px",
                     border: `1px solid rgba(${rgb}, 0.35)`,
                     background: "transparent", color: "var(--text-muted)",
@@ -85,10 +85,10 @@ _buildWebOptionsSection(container, rgb) {
                 this._listen(chip, "touchend", engineChipHandler.onTouchEnd);
                 this._listen(chip, "click", _toggleEngine);
                 this._listen(chip, "mouseenter", () => {
-                    if (this._activeEngineId !== eng.id) chip.style.background = `rgba(${rgb}, 0.08)`;
+                    if (this._activeEngineId !== eng.id) chip.setCssStyles({background: `rgba(${rgb}, 0.08)`});
                 });
                 this._listen(chip, "mouseleave", () => {
-                    if (this._activeEngineId !== eng.id) chip.style.background = "transparent";
+                    if (this._activeEngineId !== eng.id) chip.setCssStyles({background: "transparent"});
                 });
             });
             this._refreshEngineChips(rgb);
@@ -99,7 +99,7 @@ _buildWebOptionsSection(container, rgb) {
             // 精确匹配 chip
             const _chipBtn = (label, applyFn) => {
                 const btn = createEl("button");
-                Object.assign(btn.style, {
+                btn.setCssStyles({
                     fontSize: "12px", padding: "3px 10px", borderRadius: "100px",
                     border: `1px solid rgba(${rgb}, 0.4)`,
                     background: "transparent", color: `rgba(${rgb}, 0.7)`,
@@ -119,9 +119,9 @@ _buildWebOptionsSection(container, rgb) {
 
             // site: 带输入框
             const siteCtrl = createDiv();
-            Object.assign(siteCtrl.style, { display: "flex", alignItems: "center", gap: "4px" });
+            siteCtrl.setCssStyles({ display: "flex", alignItems: "center", gap: "4px" });
             const siteInput = siteCtrl.createEl("input", { type: "text" });
-            Object.assign(siteInput.style, {
+            siteInput.setCssStyles({
                 width: "110px", fontSize: "12px", padding: "2px 6px",
                 borderRadius: "5px", border: "1px solid var(--background-modifier-border)",
                 background: "var(--background-primary)", color: "var(--text-normal)"
@@ -138,9 +138,9 @@ _buildWebOptionsSection(container, rgb) {
 
             // filetype: select + 自定义输入框
             const ftWrap = createDiv();
-            Object.assign(ftWrap.style, { display: "flex", alignItems: "center", gap: "4px" });
+            ftWrap.setCssStyles({ display: "flex", alignItems: "center", gap: "4px" });
             const ftSelect = ftWrap.createEl("select");
-            Object.assign(ftSelect.style, {
+            ftSelect.setCssStyles({
                 fontSize: "12px", padding: "2px 4px", borderRadius: "5px",
                 border: "1px solid var(--background-modifier-border)",
                 background: "var(--background-primary)", color: "var(--text-normal)", cursor: "pointer"
@@ -150,7 +150,7 @@ _buildWebOptionsSection(container, rgb) {
             });
             // 自定义输入框（初始隐藏）
             const ftCustomInput = ftWrap.createEl("input", { type: "text" });
-            Object.assign(ftCustomInput.style, {
+            ftCustomInput.setCssStyles({
                 display: "none", width: "80px", fontSize: "12px", padding: "2px 6px",
                 borderRadius: "5px", border: "1px solid var(--background-modifier-border)",
                 background: "var(--background-primary)", color: "var(--text-normal)"
@@ -161,7 +161,7 @@ _buildWebOptionsSection(container, rgb) {
             this._listen(ftSelect, "mousedown", e => e.stopPropagation());
             this._listen(ftSelect, "change", () => {
                 const isCustom = ftSelect.value === "custom";
-                ftCustomInput.style.display = isCustom ? "inline-block" : "none";
+                ftCustomInput.setCssStyles({display: isCustom ? "inline-block" : "none"});
                 if (!isCustom) this._applyWebOperator("filetype", ftSelect.value);
             });
             const _applyFtCustom = () => {
@@ -177,7 +177,7 @@ _buildWebOptionsSection(container, rgb) {
             // ── 信息源（配置驱动 + 编辑模式）──────────────────────────────
             const sourceSectionLabel = this._mkSectionLabel(container, "信息源");
             // section label 行右侧加编辑开关按钮
-            Object.assign(sourceSectionLabel.style, { display: "flex", alignItems: "center", justifyContent: "space-between" });
+            sourceSectionLabel.setCssStyles({ display: "flex", alignItems: "center", justifyContent: "space-between" });
             this._sourceEditBtnEl = this._mkNavBtn("pencil", 13);
             this._sourceEditBtnEl.title = "编辑信息源";
             const sourceEditHandler = this._makeTouchHandler(() => this._toggleSourceEditMode(rgb));
@@ -187,7 +187,7 @@ _buildWebOptionsSection(container, rgb) {
             sourceSectionLabel.appendChild(this._sourceEditBtnEl);
 
             const sourceRow = container.createDiv();
-            Object.assign(sourceRow.style, {
+            sourceRow.setCssStyles({
                 display: "flex", flexWrap: "wrap", gap: "6px", padding: "10px 14px"
             });
             this._webSourceRowEl = sourceRow;
@@ -198,9 +198,9 @@ _refreshEngineChips(rgb) {
             if (!rgb) rgb = this._panelRgb || this._getSeasonRgb();
             this._engineChipEls.forEach((chip, id) => {
                 const isActive = this._activeEngineId === id;
-                chip.style.background   = isActive ? `rgba(${rgb}, 0.15)` : "transparent";
-                chip.style.color        = isActive ? `rgb(${rgb})`        : "var(--text-muted)";
-                chip.style.borderColor  = isActive ? `rgba(${rgb}, 0.7)`  : `rgba(${rgb}, 0.35)`;
+                chip.setCssStyles({background: isActive ? `rgba(${rgb}, 0.15)` : "transparent"});
+                chip.setCssStyles({color: isActive ? `rgb(${rgb})`        : "var(--text-muted)"});
+                chip.setCssStyles({borderColor: isActive ? `rgba(${rgb}, 0.7)`  : `rgba(${rgb}, 0.35)`});
             });
         }
 
@@ -229,7 +229,7 @@ _renderSourceChips(row, rgb) {
 
             this.cfg.webSources.forEach((src, idx) => {
                 const chip = row.createEl("button");
-                Object.assign(chip.style, {
+                chip.setCssStyles({
                     fontSize: "12px", padding: "3px 10px", borderRadius: "100px",
                     border: `1px solid rgba(${rgb}, 0.35)`,
                     background: "transparent", color: "var(--text-muted)",
@@ -239,11 +239,11 @@ _renderSourceChips(row, rgb) {
                 });
 
                 const labelSpan = chip.createSpan({ text: src.label });
-                Object.assign(labelSpan.style, { pointerEvents: "none" });
+                labelSpan.setCssStyles({ pointerEvents: "none" });
 
                 if (this._webEditMode) {
                     const editIconSpan = chip.createSpan();
-                    Object.assign(editIconSpan.style, {
+                    editIconSpan.setCssStyles({
                         display: "inline-flex", alignItems: "center",
                         marginLeft: "2px", color: `rgba(${rgb}, 0.7)`, cursor: "pointer"
                     });
@@ -260,7 +260,7 @@ _renderSourceChips(row, rgb) {
                     });
 
                     const delIconSpan = chip.createSpan();
-                    Object.assign(delIconSpan.style, {
+                    delIconSpan.setCssStyles({
                         display: "inline-flex", alignItems: "center",
                         marginLeft: "2px", color: "var(--text-error)", cursor: "pointer"
                     });
@@ -279,9 +279,9 @@ _renderSourceChips(row, rgb) {
                     const _applySource = () => {
                         this._applyWebOperator("site", src.domain);
                         const isActive = this._input.value.includes(`site:${src.domain}`);
-                        chip.style.background  = isActive ? `rgba(${rgb}, 0.15)` : "transparent";
-                        chip.style.color       = isActive ? `rgb(${rgb})`        : "var(--text-muted)";
-                        chip.style.borderColor = isActive ? `rgba(${rgb}, 0.7)`  : `rgba(${rgb}, 0.35)`;
+                        chip.setCssStyles({background: isActive ? `rgba(${rgb}, 0.15)` : "transparent"});
+                        chip.setCssStyles({color: isActive ? `rgb(${rgb})`        : "var(--text-muted)"});
+                        chip.setCssStyles({borderColor: isActive ? `rgba(${rgb}, 0.7)`  : `rgba(${rgb}, 0.35)`});
                     };
                     const applyHandler = this._makeTouchHandler(_applySource);
                     this._listen(chip, "touchstart", applyHandler.onTouchStart, { passive: true });
@@ -292,7 +292,7 @@ _renderSourceChips(row, rgb) {
 
             if (this._webEditMode) {
                 const addBtn = row.createEl("button");
-                Object.assign(addBtn.style, {
+                addBtn.setCssStyles({
                     fontSize: "12px", padding: "3px 10px", borderRadius: "100px",
                     border: `1.5px dashed rgba(${rgb}, 0.4)`,
                     background: "transparent", color: `rgba(${rgb}, 0.7)`,
@@ -301,7 +301,7 @@ _renderSourceChips(row, rgb) {
                     transition: "background 0.15s"
                 });
                 const addIconSpan = addBtn.createSpan();
-                Object.assign(addIconSpan.style, { display: "inline-flex", alignItems: "center", pointerEvents: "none" });
+                addIconSpan.setCssStyles({ display: "inline-flex", alignItems: "center", pointerEvents: "none" });
                 this._setIcon(addIconSpan, "plus", 12);
                 addBtn.addClass('primecore-hover-action');addBtn.setAttribute('aria-label','添加信息源');
                 addBtn.createSpan({cls:'primecore-action-label',text:'添加'});
@@ -325,7 +325,7 @@ _openSourceEditor(src, idx, anchorEl, row, rgb) {
             this._sourceEditor = editorEl;
             editorEl.setAttribute("data-sb-source-editor", "1");
             editorEl.setAttribute("data-sb-float", "1");
-            Object.assign(editorEl.style, {
+            editorEl.setCssStyles({
                 position: "fixed",
                 zIndex: String(9200 + (++this._zCounter)),
                 background: "var(--background-primary)",
@@ -347,14 +347,14 @@ _openSourceEditor(src, idx, anchorEl, row, rgb) {
                 const top  = (rect.bottom + 6 + eH < window.innerHeight - 8)
                     ? rect.bottom + 6
                     : Math.max(8, rect.top - 6 - eH);
-                editorEl.style.left = left + "px";
-                editorEl.style.top  = top  + "px";
+                editorEl.setCssStyles({left: left + "px"});
+                editorEl.setCssStyles({top: top  + "px"});
             };
             this._frame(_posEditor);
 
             const _mkInput = (placeholder, value) => {
                 const inp = editorEl.createEl("input", { type: "text" });
-                Object.assign(inp.style, {
+                inp.setCssStyles({
                     fontSize: "12px", padding: "4px 8px",
                     borderRadius: "5px", border: "1px solid var(--background-modifier-border)",
                     background: "var(--background-secondary)", color: "var(--text-normal)", outline: "none"
@@ -370,7 +370,7 @@ _openSourceEditor(src, idx, anchorEl, row, rgb) {
             const domainInput = _mkInput("域名（如 github.com）", src?.domain || "");
 
             const btnRow = editorEl.createDiv();
-            Object.assign(btnRow.style, { display: "flex", gap: "6px", justifyContent: "flex-end" });
+            btnRow.setCssStyles({ display: "flex", gap: "6px", justifyContent: "flex-end" });
 
             const cancelBtn = this._mkNavBtn("x", 13);
             cancelBtn.title = "取消";
@@ -381,7 +381,7 @@ _openSourceEditor(src, idx, anchorEl, row, rgb) {
 
             const confirmBtn = this._mkNavBtn("check", 13);
             confirmBtn.title = "确认";
-            confirmBtn.style.color = `rgb(${rgb})`;
+            confirmBtn.setCssStyles({color: `rgb(${rgb})`});
             const _confirm = () => {
                 try {
                     const newLabel  = nameInput.value.trim();

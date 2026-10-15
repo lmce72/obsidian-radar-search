@@ -39,7 +39,7 @@ _buildScopeMenu() {
             // 同样挂到 body；data-sb-float 用于批量清除
             this._scopeMenu = document.body.createDiv();
             this._scopeMenu.setAttribute("data-sb-float", "1");
-            Object.assign(this._scopeMenu.style, {
+            this._scopeMenu.setCssStyles({
                 position: "fixed",
                 zIndex: "9100",
                 background: "var(--background-primary)",
@@ -62,7 +62,7 @@ _buildScopeMenu() {
 
             for (const m of modes) {
                 const item = this._scopeMenu.createDiv();
-                Object.assign(item.style, {
+                item.setCssStyles({
                     display: "flex",
                     alignItems: "center",
                     gap: "8px",
@@ -75,12 +75,12 @@ _buildScopeMenu() {
                 });
 
                 const iconWrap = item.createSpan();
-                Object.assign(iconWrap.style, { display: "inline-flex", alignItems: "center", color: "var(--text-muted)" });
+                iconWrap.setCssStyles({ display: "inline-flex", alignItems: "center", color: "var(--text-muted)" });
                 this._setIcon(iconWrap, m.icon, 15);
                 item.createSpan({ text: m.label });
 
-                this._listen(item, "mouseenter", () => { item.style.background = "var(--background-modifier-hover)"; });
-                this._listen(item, "mouseleave", () => { item.style.background = "transparent"; });
+                this._listen(item, "mouseenter", () => { item.setCssStyles({background: "var(--background-modifier-hover)"}); });
+                this._listen(item, "mouseleave", () => { item.setCssStyles({background: "transparent"}); });
                 this._listen(item, "mousedown", (e) => { e.preventDefault(); });
                 const itemHandler = this._makeTouchHandler(() => { this._selectMode(m.mode); });
                 this._listen(item, "touchstart", itemHandler.onTouchStart, { passive: true });
@@ -91,7 +91,7 @@ _buildScopeMenu() {
 
 _mkNavBtn(iconName, size = 14) {
             const btn = createEl("button");
-            Object.assign(btn.style, {
+            btn.setCssStyles({
                 width: "24px", height: "24px",
                 borderRadius: "50%",
                 border: "none",
@@ -107,16 +107,16 @@ _mkNavBtn(iconName, size = 14) {
                 flexShrink: "0"
             });
             const iconSpan = btn.createSpan();
-            Object.assign(iconSpan.style, { display: "inline-flex", alignItems: "center", pointerEvents: "none" });
+            iconSpan.setCssStyles({ display: "inline-flex", alignItems: "center", pointerEvents: "none" });
             this._setIcon(iconSpan, iconName, size);
-            this._listen(btn, "mouseenter", () => { btn.style.background = "var(--background-modifier-hover)"; });
-            this._listen(btn, "mouseleave", () => { btn.style.background = "transparent"; });
+            this._listen(btn, "mouseenter", () => { btn.setCssStyles({background: "var(--background-modifier-hover)"}); });
+            this._listen(btn, "mouseleave", () => { btn.setCssStyles({background: "transparent"}); });
             return btn;
         }
 
 _mkFloatHeader(container, titleText, rightEl) {
             const h = container.createDiv();
-            Object.assign(h.style, {
+            h.setCssStyles({
                 position: "sticky",
                 top: "0",
                 display: "flex",
@@ -129,7 +129,7 @@ _mkFloatHeader(container, titleText, rightEl) {
                 zIndex: "1"
             });
             const titleEl = h.createSpan({ text: titleText });
-            Object.assign(titleEl.style, {
+            titleEl.setCssStyles({
                 fontSize: "11px",
                 fontWeight: "600",
                 color: "var(--text-muted)",
@@ -146,7 +146,7 @@ _mkFloatHeader(container, titleText, rightEl) {
 
 _mkSectionLabel(container, text) {
             const lbl = container.createDiv();
-            Object.assign(lbl.style, {
+            lbl.setCssStyles({
                 padding: "6px 12px 4px",
                 fontSize: "10px",
                 fontWeight: "600",
@@ -168,7 +168,7 @@ _buildVaultSearchPanel(rgb) {
 
             this._vaultSearchPanel = document.body.createDiv();
             this._vaultSearchPanel.setAttribute("data-sb-float", "1");
-            Object.assign(this._vaultSearchPanel.style, {
+            this._vaultSearchPanel.setCssStyles({
                 position: "fixed",
                 zIndex: "9100",
                 background: "var(--background-primary)",
@@ -193,13 +193,13 @@ _buildVaultSearchPanel(rgb) {
             this._listen(closeBtn, "click", () => this._closePanel());
             const headerActions=this._vaultSearchPanel.createDiv({cls:'primecore-result-tools'});
             this._panelQuickFilterButton=this._addQuickFilterButton(headerActions);
-            this._panelQuickFilterButton.buttonEl.style.display=this._mode==='web'?'none':'inline-flex';
+            this._panelQuickFilterButton.buttonEl.setCssStyles({display: this._mode==='web'?'none':'inline-flex'});
             headerActions.appendChild(closeBtn);
             this._mkFloatHeader(this._vaultSearchPanel, '搜索选项', headerActions);
 
             // ── Tab 行（仅 global 模式显示，切换 vault/web 两栏）────────────────
             this._panelTabRow = this._vaultSearchPanel.createDiv();
-            Object.assign(this._panelTabRow.style, {
+            this._panelTabRow.setCssStyles({
                 display: "none",  // _refreshPanelForMode 控制
                 gap: "8px",
                 padding: "10px 12px",
@@ -207,7 +207,7 @@ _buildVaultSearchPanel(rgb) {
             });
             const _mkTab = (iconName, label, tabKey) => {
                 const div = this._panelTabRow.createDiv();
-                Object.assign(div.style, {
+                div.setCssStyles({
                     display: "inline-flex",
                     alignItems: "center",
                     gap: "6px",
@@ -225,7 +225,7 @@ _buildVaultSearchPanel(rgb) {
                 div.setAttribute("role", "button");
                 div.setAttribute("tabindex", "0");
                 const iconSpan = div.createSpan();
-                Object.assign(iconSpan.style, { display: "inline-flex", alignItems: "center", pointerEvents: "none" });
+                iconSpan.setCssStyles({ display: "inline-flex", alignItems: "center", pointerEvents: "none" });
                 this._setIcon(iconSpan, iconName, 13);
                 div.addClass('primecore-hover-action');div.setAttribute('aria-label',label);
                 div.createSpan({cls:'primecore-action-label',text:label});
@@ -236,10 +236,10 @@ _buildVaultSearchPanel(rgb) {
                 this._listen(div, "touchend", tabHandler.onTouchEnd);
                 this._listen(div, "click", () => this._switchPanelTab(tabKey));
                 this._listen(div, "mouseenter", () => {
-                    if (div._tabKey !== this._panelActiveTab) div.style.background = "var(--background-modifier-hover)";
+                    if (div._tabKey !== this._panelActiveTab) div.setCssStyles({background: "var(--background-modifier-hover)"});
                 });
                 this._listen(div, "mouseleave", () => {
-                    if (div._tabKey !== this._panelActiveTab) div.style.background = "var(--background-secondary)";
+                    if (div._tabKey !== this._panelActiveTab) div.setCssStyles({background: "var(--background-secondary)"});
                 });
                 return div;
             };
@@ -253,7 +253,7 @@ _buildVaultSearchPanel(rgb) {
             // ── grid 行构建辅助 ──────────────────────────────────────────────
             const _mkGrid = (parent) => {
                 const g = parent.createDiv();
-                Object.assign(g.style, {
+                g.setCssStyles({
                     display: "grid",
                     gridTemplateColumns: "1fr auto",
                     gap: "8px 14px",
@@ -267,14 +267,14 @@ _buildVaultSearchPanel(rgb) {
             // Row: optional icon + label + control (icon follows the panel's existing 13px scale).
             const _row = (grid, labelText, controlEl, iconName = undefined) => {
                 const wrap = grid.createSpan();
-                Object.assign(wrap.style, { display: "inline-flex", alignItems: "center", gap: "7px", minWidth: "0" });
+                wrap.setCssStyles({ display: "inline-flex", alignItems: "center", gap: "7px", minWidth: "0" });
                 if (iconName) {
                     const ic = wrap.createSpan();
-                    Object.assign(ic.style, { display: "inline-flex", alignItems: "center", flexShrink: "0", color: "var(--text-muted)" });
+                    ic.setCssStyles({ display: "inline-flex", alignItems: "center", flexShrink: "0", color: "var(--text-muted)" });
                     this._setIcon(ic, iconName, 13);
                 }
                 const lbl = wrap.createSpan({ text: labelText });
-                Object.assign(lbl.style, {
+                lbl.setCssStyles({
                     fontSize: "13px", color: "var(--text-normal)", userSelect: "none",
                     overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap"
                 });
@@ -284,7 +284,7 @@ _buildVaultSearchPanel(rgb) {
             // Obsidian 原生 checkbox-container toggle
             const _toggle = (initial, onChange) => {
                 const label = createEl("label", { cls: initial ? "checkbox-container is-enabled" : "checkbox-container" });
-                label.style.cssText = "cursor:pointer;flex-shrink:0;";
+                label.setCssStyles({cssText: "cursor:pointer;flex-shrink:0;"});
                 const inp = label.createEl("input", { type: "checkbox" });
                 inp.checked = initial;
                 // 所有专项搜索开关统一走这里，改完即刷新按钮上的状态图标
@@ -306,7 +306,7 @@ _buildVaultSearchPanel(rgb) {
             // primary 跳转按钮
             const _primaryBtn = (text) => {
                 const btn = createEl("button");
-                Object.assign(btn.style, {
+                btn.setCssStyles({
                     background: `rgb(${rgb})`,
                     color: "var(--text-on-accent)",
                     border: "none",
@@ -320,7 +320,7 @@ _buildVaultSearchPanel(rgb) {
                     touchAction: "manipulation"
                 });
                 const iconSpan = btn.createSpan();
-                Object.assign(iconSpan.style, { display: "inline-flex", alignItems: "center", pointerEvents: "none" });
+                iconSpan.setCssStyles({ display: "inline-flex", alignItems: "center", pointerEvents: "none" });
                 this._setIcon(iconSpan, "arrow-right", 13);
                 btn.addClass('primecore-hover-action');btn.setAttribute('aria-label',text);
                 btn.createSpan({cls:'primecore-action-label',text});
@@ -334,14 +334,14 @@ _buildVaultSearchPanel(rgb) {
             // 内容搜索上限：左数字框（限制时可编辑）+ 右开关（控制是否限制）
             {
                 const rightCtrl = createDiv();
-                Object.assign(rightCtrl.style, { display: "flex", alignItems: "center", gap: "6px", flexShrink: "0" });
+                rightCtrl.setCssStyles({ display: "flex", alignItems: "center", gap: "6px", flexShrink: "0" });
 
                 const numInput = createEl("input", { type: "number" });
                 numInput.value    = String(this.cfg.vaultContentSearchMaxResults || 30);
                 numInput.min      = "1";
                 numInput.max      = "500";
                 numInput.disabled = !this._limitContentResults;
-                Object.assign(numInput.style, {
+                numInput.setCssStyles({
                     width: "54px", padding: "2px 6px", fontSize: "12px",
                     borderRadius: "5px", border: "1px solid var(--background-modifier-border)",
                     background: "var(--background-primary)", color: "var(--text-normal)",
@@ -360,7 +360,7 @@ _buildVaultSearchPanel(rgb) {
                 this._listen(toggleInp, "change", () => {
                     this._limitContentResults     = toggleInp.checked;
                     numInput.disabled             = !toggleInp.checked;
-                    numInput.style.opacity        = toggleInp.checked ? "1" : "0.4";
+                    numInput.setCssStyles({opacity: toggleInp.checked ? "1" : "0.4"});
                     this._saveCfgKey("limitContentResults", toggleInp.checked);
                 });
 
@@ -370,7 +370,7 @@ _buildVaultSearchPanel(rgb) {
             }
 
             const presetSelect = createEl("select");
-            Object.assign(presetSelect.style, {
+            presetSelect.setCssStyles({
                 fontSize: "12px",
                 border: "1px solid var(--background-modifier-border)",
                 borderRadius: "100px",
@@ -520,15 +520,15 @@ _buildVaultSearchPanel(rgb) {
 
             // ── Web 搜索选项区（web 模式或 global 切 web tab 时显示）──────────
             this._panelWebSection = this._vaultSearchPanel.createDiv();
-            this._panelWebSection.style.display = "none";
+            this._panelWebSection.setCssStyles({display: "none"});
             this._buildWebOptionsSection(this._panelWebSection, rgb);
         }
 
 _applyPanelBtnStyle(_panelOpen) {
             if (!this._contentToggleBtn) return;
             const rgb = this._getSeasonRgb();
-            this._contentToggleBtn.style.color        = `rgb(${rgb})`;
-            this._contentToggleBtn.style.borderColor  = `rgba(${rgb}, 0.8)`;
+            this._contentToggleBtn.setCssStyles({color: `rgb(${rgb})`});
+            this._contentToggleBtn.setCssStyles({borderColor: `rgba(${rgb}, 0.8)`});
             this._setSearchButtonBackground(this._contentToggleBtn);
         }
 
@@ -537,15 +537,15 @@ _switchPanelTab(tab) {
             const rgb = this._panelRgb || this._getSeasonRgb();
             this._panelActiveTab = tab;
             const showVault = tab === "vault";
-            this._panelVaultSection.style.display = showVault ? "block" : "none";
-            this._panelWebSection.style.display   = showVault ? "none"  : "block";
+            this._panelVaultSection.setCssStyles({display: showVault ? "block" : "none"});
+            this._panelWebSection.setCssStyles({display: showVault ? "none"  : "block"});
             // 更新 tab div 高亮（卡片风格：底部指示线 + 主题色文字 + 微背景）
             [this._panelTabVault, this._panelTabWeb].forEach(div => {
                 if (!div) return;
                 const isActive = div._tabKey === tab;
-                div.style.color            = isActive ? `rgb(${rgb})`         : "var(--text-muted)";
-                div.style.borderBottomColor = isActive ? `rgb(${rgb})`         : "transparent";
-                div.style.background       = isActive ? `rgba(${rgb}, 0.08)`  : "var(--background-secondary)";
+                div.setCssStyles({color: isActive ? `rgb(${rgb})`         : "var(--text-muted)"});
+                div.setCssStyles({borderBottomColor: isActive ? `rgb(${rgb})`         : "transparent"});
+                div.setCssStyles({background: isActive ? `rgba(${rgb}, 0.08)`  : "var(--background-secondary)"});
             });
         }
 
@@ -553,15 +553,15 @@ _refreshPanelForMode(mode) {
             if (!this._panelTabRow) return;
             const isGlobal = mode === "global";
             // global 模式才显示双 tab 行
-            this._panelTabRow.style.display = isGlobal ? "flex" : "none";
+            this._panelTabRow.setCssStyles({display: isGlobal ? "flex" : "none"});
             if (mode === "vault") {
                 // vault 模式：只显示 vault 区
-                this._panelVaultSection.style.display = "block";
-                this._panelWebSection.style.display   = "none";
+                this._panelVaultSection.setCssStyles({display: "block"});
+                this._panelWebSection.setCssStyles({display: "none"});
             } else if (mode === "web") {
                 // web 模式：只显示 web 区
-                this._panelVaultSection.style.display = "none";
-                this._panelWebSection.style.display   = "block";
+                this._panelVaultSection.setCssStyles({display: "none"});
+                this._panelWebSection.setCssStyles({display: "block"});
             } else {
                 // global 模式：默认显示 vault tab
                 this._switchPanelTab("vault");

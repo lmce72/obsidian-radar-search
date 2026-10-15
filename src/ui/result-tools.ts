@@ -14,7 +14,7 @@ export const withResultTools=Base=>class extends Base {
     this.register(()=>{this._toolListEditor?.dispose();this._quickFilterMenu?.close();});
   }
   _syncResultTools(history=false) {
-    this._resultToolsEl.style.display=history||this._mode==='web'?'none':'flex';
+    this._resultToolsEl.setCssStyles({display: history||this._mode==='web'?'none':'flex'});
     this._filterButton.buttonEl.toggleClass('is-active',!!this._temporaryFilter||!!this._quickExcludedPaths.length);
     this._filterButton.buttonEl.setAttribute('aria-pressed',String(!!this._temporaryFilter||!!this._quickExcludedPaths.length));
     this._sortButton.buttonEl.title=SORT_OPTIONS[this._vaultSortMode]||'相关度';

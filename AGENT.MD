@@ -2,6 +2,7 @@
 
 - Source, build scripts and tests use TypeScript. Keep the Obsidian runtime external to the bundle.
 - Before publishing, run `bun install --frozen-lockfile`, `bun run check`, `bun test --timeout 5000`, and `bun run build`.
+- `bun run check` includes the official Obsidian `no-static-styles-assignment`, `no-unsupported-api`, and `detach-leaves` rules. Keep them enabled; use CSS classes / `setCssStyles` / custom properties for styling, match `minAppVersion` to APIs used, and never detach workspace leaves in `onunload`.
 - Use native Obsidian UI and icon APIs; keep the plugin independent of Iconize and external vault scripts.
 - Do not commit personal settings, history, credentials, absolute local paths or generated release assets.
 - Preserve the existing `primecore-search` plugin ID so installed settings and command shortcuts continue working; the public brand is **Radar Search**.

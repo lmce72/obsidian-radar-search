@@ -18,7 +18,7 @@ export class FloatingSearch extends Component {
   async open() {
     this.backdropEl = this.document.body.createDiv({ cls: 'modal-container mod-dim primecore-floating-search-backdrop' });
     this.backdropEl.setAttribute('aria-hidden', 'true');
-    Object.assign(this.backdropEl.style, {
+    this.backdropEl.setCssStyles({
       position: 'fixed',
       inset: '0',
       zIndex: '8999',
@@ -27,9 +27,9 @@ export class FloatingSearch extends Component {
     // Reuse the command palette's backdrop CSS, including theme overrides.
     // 复用命令面板遮罩样式，包含主题对颜色、透明度和模糊效果的覆盖。
     this.backdropBackgroundEl = this.backdropEl.createDiv({ cls: 'modal-bg' });
-    this.backdropBackgroundEl.style.opacity = '0.85';
+    this.backdropBackgroundEl.setCssStyles({opacity: '0.85'});
     this.contentEl = this.document.body.createDiv({ cls: 'primecore-floating-search' });
-    Object.assign(this.contentEl.style, {
+    this.contentEl.setCssStyles({
       position: 'fixed',
       top: '30%',
       left: '15%',

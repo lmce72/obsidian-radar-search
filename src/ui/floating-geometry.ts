@@ -22,6 +22,6 @@ export function floatingGeometry(anchor:AnchorBounds,viewport:ViewportBounds,des
 }
 export function positionFloatingElement(el:HTMLElement,anchor:AnchorBounds,desiredWidth:number,naturalHeight:number,limit=480) {
   const geometry=floatingGeometry(anchor,viewportBounds(el.ownerDocument.defaultView),desiredWidth,naturalHeight,limit);
-  Object.assign(el.style,{left:geometry.left+'px',top:geometry.top+'px',width:geometry.width+'px',maxHeight:geometry.maxHeight+'px',minWidth:'0',boxSizing:'border-box'});
+  el.setCssStyles({left:geometry.left+'px',top:geometry.top+'px',width:geometry.width+'px',maxHeight:geometry.maxHeight+'px',minWidth:'0',boxSizing:'border-box'});
   return geometry;
 }

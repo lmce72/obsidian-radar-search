@@ -269,7 +269,7 @@ _renderHistoryDropdown(date, records, page = 1) {
 
             // ── header：日期导航（复用 _mkFloatHeader / _mkNavBtn）────────────
             const dateNavEl = createDiv();
-            Object.assign(dateNavEl.style, {
+            dateNavEl.setCssStyles({
                 display: "flex",
                 alignItems: "center",
                 gap: "2px",
@@ -277,7 +277,7 @@ _renderHistoryDropdown(date, records, page = 1) {
             });
 
             const hintSpan = createSpan();
-            Object.assign(hintSpan.style, {
+            hintSpan.setCssStyles({
                 fontSize: "11px",
                 color: "var(--text-muted)",
                 flexShrink: "1",
@@ -289,7 +289,7 @@ _renderHistoryDropdown(date, records, page = 1) {
                 gap: "4px"
             });
             const historyIconSpan = hintSpan.createSpan();
-            Object.assign(historyIconSpan.style, { display: "inline-flex", alignItems: "center", flexShrink: "0" });
+            historyIconSpan.setCssStyles({ display: "inline-flex", alignItems: "center", flexShrink: "0" });
             this._setIcon(historyIconSpan, "history", 13);
             hintSpan.createSpan({ text: "历史记录" });
 
@@ -303,7 +303,7 @@ _renderHistoryDropdown(date, records, page = 1) {
             const prevDateBtn = this._mkNavBtn("chevron-left");
             const nextDateBtn = this._mkNavBtn("chevron-right");
             const dateInput   = createEl("input", { type: "date" });
-            Object.assign(dateInput.style, {
+            dateInput.setCssStyles({
                 fontSize: "12px",
                 border: "1px solid var(--background-modifier-border)",
                 borderRadius: "5px",
@@ -321,13 +321,13 @@ _renderHistoryDropdown(date, records, page = 1) {
             // 显示所有模式时设置为只读
             if (this._showAllHistory) {
                 dateInput.readOnly = true;
-                dateInput.style.cursor = "default";
-                dateInput.style.opacity = "0.5";
+                dateInput.setCssStyles({cursor: "default"});
+                dateInput.setCssStyles({opacity: "0.5"});
             }
 
             // 显示所有历史记录开关
             const showAllWrapper = createDiv();
-            Object.assign(showAllWrapper.style, {
+            showAllWrapper.setCssStyles({
                 display: "flex",
                 alignItems: "center",
                 gap: "4px",
@@ -336,7 +336,7 @@ _renderHistoryDropdown(date, records, page = 1) {
             });
 
             const showAllLabel = showAllWrapper.createSpan({ text: "显示所有" });
-            Object.assign(showAllLabel.style, {
+            showAllLabel.setCssStyles({
                 fontSize: "11px",
                 color: "var(--text-muted)",
                 userSelect: "none",
@@ -344,7 +344,7 @@ _renderHistoryDropdown(date, records, page = 1) {
             });
 
             const showAllToggle = showAllWrapper.createEl("label", { cls: this._showAllHistory ? "checkbox-container is-enabled" : "checkbox-container" });
-            Object.assign(showAllToggle.style, {
+            showAllToggle.setCssStyles({
                 cursor: "pointer",
                 flexShrink: "0",
                 margin: "0"
@@ -370,7 +370,7 @@ _renderHistoryDropdown(date, records, page = 1) {
 
             // 也允许点击文字标签来切换
             const showAllLabelHandler = this._makeTouchHandler(_toggleShowAll);
-            showAllLabel.style.cursor = "pointer";
+            showAllLabel.setCssStyles({cursor: "pointer"});
             this._listen(showAllLabel, "touchstart", showAllLabelHandler.onTouchStart, { passive: true });
             this._listen(showAllLabel, "touchend", showAllLabelHandler.onTouchEnd);
             this._listen(showAllLabel, "click", _toggleShowAll);
@@ -382,24 +382,24 @@ _renderHistoryDropdown(date, records, page = 1) {
                 if (showAllActive) {
                     prevDateBtn.disabled = true;
                     nextDateBtn.disabled = true;
-                    prevDateBtn.style.opacity = "0.3";
-                    nextDateBtn.style.opacity = "0.3";
-                    prevDateBtn.style.cursor = "default";
-                    nextDateBtn.style.cursor = "default";
+                    prevDateBtn.setCssStyles({opacity: "0.3"});
+                    nextDateBtn.setCssStyles({opacity: "0.3"});
+                    prevDateBtn.setCssStyles({cursor: "default"});
+                    nextDateBtn.setCssStyles({cursor: "default"});
                     dateInput.readOnly = true;
-                    dateInput.style.cursor = "default";
-                    dateInput.style.opacity = "0.5";
+                    dateInput.setCssStyles({cursor: "default"});
+                    dateInput.setCssStyles({opacity: "0.5"});
                 } else {
                     // 正常日期模式：根据日期范围控制按钮状态
                     prevDateBtn.disabled = minDate ? d <= minDate : false;
                     nextDateBtn.disabled = d >= today;
-                    prevDateBtn.style.opacity = prevDateBtn.disabled ? "0.3" : "1";
-                    nextDateBtn.style.opacity = nextDateBtn.disabled ? "0.3" : "1";
-                    prevDateBtn.style.cursor  = prevDateBtn.disabled ? "default" : "pointer";
-                    nextDateBtn.style.cursor  = nextDateBtn.disabled ? "default" : "pointer";
+                    prevDateBtn.setCssStyles({opacity: prevDateBtn.disabled ? "0.3" : "1"});
+                    nextDateBtn.setCssStyles({opacity: nextDateBtn.disabled ? "0.3" : "1"});
+                    prevDateBtn.setCssStyles({cursor: prevDateBtn.disabled ? "default" : "pointer"});
+                    nextDateBtn.setCssStyles({cursor: nextDateBtn.disabled ? "default" : "pointer"});
                     dateInput.readOnly = false;
-                    dateInput.style.cursor = "pointer";
-                    dateInput.style.opacity = "1";
+                    dateInput.setCssStyles({cursor: "pointer"});
+                    dateInput.setCssStyles({opacity: "1"});
                 }
             };
             _updateDateNavState(date);
@@ -429,7 +429,7 @@ _renderHistoryDropdown(date, records, page = 1) {
 
             // 显示清除历史按钮并绑定事件
             if (this._clearHistoryBtn) {
-                this._clearHistoryBtn.style.display = records.length > 0 ? "flex" : "none";
+                this._clearHistoryBtn.setCssStyles({display: records.length > 0 ? "flex" : "none"});
                 // 移除旧事件监听器（通过克隆节点）
                 const newClearBtn = this._clearHistoryBtn.cloneNode(true);
                 this._clearHistoryBtn.parentNode.replaceChild(newClearBtn, this._clearHistoryBtn);
@@ -442,8 +442,8 @@ _renderHistoryDropdown(date, records, page = 1) {
                 this._listen(this._clearHistoryBtn, "touchstart", clearHistoryHandler.onTouchStart, { passive: true });
                 this._listen(this._clearHistoryBtn, "touchend", (e) => { e.stopPropagation(); clearHistoryHandler.onTouchEnd(e); });
                 this._listen(this._clearHistoryBtn, "click", (e) => { e.stopPropagation(); this._clearCurrentPageHistory(date, records); });
-                this._listen(this._clearHistoryBtn, "mouseenter", () => { this._clearHistoryBtn.style.background = "var(--background-modifier-hover)"; });
-                this._listen(this._clearHistoryBtn, "mouseleave", () => { this._clearHistoryBtn.style.background = "transparent"; });
+                this._listen(this._clearHistoryBtn, "mouseenter", () => { this._clearHistoryBtn.setCssStyles({background: "var(--background-modifier-hover)"}); });
+                this._listen(this._clearHistoryBtn, "mouseleave", () => { this._clearHistoryBtn.setCssStyles({background: "transparent"}); });
             }
 
             // ── 分页切片 ──────────────────────────────────────────────────────
@@ -457,7 +457,7 @@ _renderHistoryDropdown(date, records, page = 1) {
             // ── 历史条目 ───────────────────────────────────────────────────
             if (records.length === 0) {
                 const emptyEl = this._dropdownInner.createDiv();
-                Object.assign(emptyEl.style, {
+                emptyEl.setCssStyles({
                     padding: "16px 14px",
                     fontSize: "13px",
                     color: "var(--text-faint)",
@@ -471,7 +471,7 @@ _renderHistoryDropdown(date, records, page = 1) {
                 for (const rec of sliced) {
                     const idx = this._itemEls.length;
                     const itemEl = this._dropdownInner.createDiv();
-                    Object.assign(itemEl.style, {
+                    itemEl.setCssStyles({
                         display: "flex",
                         flexDirection: "row",
                         alignItems: "center",
@@ -484,7 +484,7 @@ _renderHistoryDropdown(date, records, page = 1) {
 
                     // 类型图标
                     const iconWrapEl = itemEl.createSpan();
-                    Object.assign(iconWrapEl.style, {
+                    iconWrapEl.setCssStyles({
                         display: "inline-flex",
                         alignItems: "center",
                         flexShrink: "0",
@@ -495,7 +495,7 @@ _renderHistoryDropdown(date, records, page = 1) {
 
                     // 文本列（label + sub）
                     const contentEl = itemEl.createDiv();
-                    Object.assign(contentEl.style, {
+                    contentEl.setCssStyles({
                         display: "flex",
                         flexDirection: "column",
                         flex: "1",
@@ -503,7 +503,7 @@ _renderHistoryDropdown(date, records, page = 1) {
                     });
 
                     const labelEl = contentEl.createSpan({ text: rec.q });
-                    Object.assign(labelEl.style, {
+                    labelEl.setCssStyles({
                         fontSize: "13px",
                         color: "var(--text-normal)",
                         overflow: "hidden",
@@ -517,12 +517,12 @@ _renderHistoryDropdown(date, records, page = 1) {
                     const subText = [modeLabel[rec.mode] || rec.mode, rec.file, dateStr, timeStr].filter(Boolean).join(" · ");
                     if (subText) {
                         const subEl = contentEl.createSpan({ text: subText });
-                        Object.assign(subEl.style, { fontSize: "11px", color: "var(--text-faint)", marginTop: "1px" });
+                        subEl.setCssStyles({ fontSize: "11px", color: "var(--text-faint)", marginTop: "1px" });
                     }
 
                     // 删除按钮
                     const delBtn = itemEl.createEl("button");
-                    Object.assign(delBtn.style, {
+                    delBtn.setCssStyles({
                         flexShrink: "0",
                         display: "inline-flex",
                         alignItems: "center",

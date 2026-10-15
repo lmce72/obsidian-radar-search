@@ -35,7 +35,7 @@ _getSeasonRgb() {
             const cancelAnimationFrame = window.cancelAnimationFrame.bind(window);
 
   const color=getComputedStyle(this.container).getPropertyValue('--interactive-accent').trim();
-  const probe=this.container.createSpan(); probe.style.color=color || 'var(--text-accent)';
+  const probe=this.container.createSpan(); probe.setCssStyles({color: color || 'var(--text-accent)'});
   const resolved=getComputedStyle(probe).color;probe.remove();
   return resolved.match(/\d+(?:\.\d+)?/g)?.slice(0,3).join(', ') || '128, 128, 128';
 }
@@ -70,7 +70,7 @@ _buildPanelMask() {
             try {
                 this._panelMask = document.body.createDiv();
                 this._panelMask.setAttribute("data-sb-float", "1");
-                Object.assign(this._panelMask.style, {
+                this._panelMask.setCssStyles({
                     position: "fixed",
                     top: "0",
                     left: "0",
@@ -101,10 +101,10 @@ _syncMask(visible) {
             try {
                 if (!this._panelMask) return;
                 if (visible) {
-                    this._panelMask.style.display = "block";
+                    this._panelMask.setCssStyles({display: "block"});
                     this._raiseFloat(this._panelMask);
                 } else {
-                    this._panelMask.style.display = "none";
+                    this._panelMask.setCssStyles({display: "none"});
                 }
             } catch (e) {
                 this._log("error", "[SearchBar] _syncMask 失败:", e);
@@ -122,7 +122,7 @@ _applyPanelPresentation() {
                 if (!this._vaultSearchPanel) return;
                 this._bottomSheet = this._isSheetLayout();
                 if (this._bottomSheet) {
-                    Object.assign(this._vaultSearchPanel.style, {
+                    this._vaultSearchPanel.setCssStyles({
                         left: "12px",
                         right: "12px",
                         top: "auto",
@@ -134,7 +134,7 @@ _applyPanelPresentation() {
                     });
                 } else {
                     // 桌面：显式复位底部定位残留，否则 top 与 bottom 同时生效会把面板拉高变形
-                    Object.assign(this._vaultSearchPanel.style, {
+                    this._vaultSearchPanel.setCssStyles({
                         left: "auto",
                         right: "auto",
                         top: "auto",
@@ -161,7 +161,7 @@ _applyScopeMenuPresentation() {
                 if (!this._scopeMenu) return;
                 this._bottomSheet = this._isSheetLayout();
                 if (this._bottomSheet) {
-                    Object.assign(this._scopeMenu.style, {
+                    this._scopeMenu.setCssStyles({
                         left: "12px",
                         right: "12px",
                         top: "auto",
@@ -172,7 +172,7 @@ _applyScopeMenuPresentation() {
                         borderRadius: "14px"
                     });
                 } else {
-                    Object.assign(this._scopeMenu.style, {
+                    this._scopeMenu.setCssStyles({
                         left: "auto",
                         right: "auto",
                         top: "auto",
@@ -192,7 +192,7 @@ _closePanel(opts = undefined) {
             try {
                 if (!this._vaultPanelOpen) return;
                 this._vaultPanelOpen = false;
-                if (this._vaultSearchPanel) this._vaultSearchPanel.style.display = "none";
+                if (this._vaultSearchPanel) this._vaultSearchPanel.setCssStyles({display: "none"});
                 this._applyPanelBtnStyle(false);
                 // 遮罩仅由仍在展开的浮层持有
                 if (!this._isScopeMenuOpen()) this._syncMask(false);
@@ -208,7 +208,7 @@ _closePanel(opts = undefined) {
 _closeScopeMenu() {
             try {
                 if (!this._scopeMenu) return;
-                this._scopeMenu.style.display = "none";
+                this._scopeMenu.setCssStyles({display: "none"});
                 if (!this._vaultPanelOpen) this._syncMask(false);
             } catch (e) {
                 this._log("error", "[SearchBar] _closeScopeMenu 失败:", e);
@@ -256,7 +256,7 @@ _buildShell(rgb) {
             const BTN_SIZE = 40;
 
             this._wrap = this.container.createDiv();
-            Object.assign(this._wrap.style, {
+            this._wrap.setCssStyles({
                 position: "relative",
                 width: "100%",
                 minHeight: PILL_H + "px",
@@ -267,7 +267,7 @@ _buildShell(rgb) {
             // 外层 flex 容器，无边框无背景
             // 移动端允许换行，避免按钮重叠
             this._pill = this._wrap.createDiv();
-            Object.assign(this._pill.style, {
+            this._pill.setCssStyles({
                 display: "flex",
                 alignItems: "center",
                 minHeight: PILL_H + "px",
@@ -282,7 +282,7 @@ _buildShell(rgb) {
 
             // 左侧圆形模式按钮
             this._scopeBtn = createEl("button");
-            Object.assign(this._scopeBtn.style, {
+            this._scopeBtn.setCssStyles({
                 flexShrink: "0",
                 width: BTN_SIZE + "px",
                 height: BTN_SIZE + "px",
@@ -299,7 +299,7 @@ _buildShell(rgb) {
                 touchAction: "manipulation"
             });
             const scopeIconEl = this._scopeBtn.createSpan();
-            Object.assign(scopeIconEl.style, { display: "inline-flex", alignItems: "center" });
+            scopeIconEl.setCssStyles({ display: "inline-flex", alignItems: "center" });
             // 用当前模式对应图标（初始为 global → compass）
             this._setIcon(scopeIconEl, this._modeConfig()[this._mode].icon, PILL_ICON_SIZE);
             this._pill.appendChild(this._scopeBtn);
@@ -311,7 +311,7 @@ _buildShell(rgb) {
             // keeps them on the same line as the buttons when there is room, and moves the whole row to
             // a second line (filling it) on narrow screens.
             this._inputRow = this._pill.createDiv();
-            Object.assign(this._inputRow.style, {
+            this._inputRow.setCssStyles({
                 display: "flex",
                 alignItems: "center",
                 gap: "4px",
@@ -321,7 +321,7 @@ _buildShell(rgb) {
 
             // 输入框：本身是带圆角的"搜索框"，4px margin 与两侧按钮隔开
             this._input = createEl("input", { type: "text" });
-            Object.assign(this._input.style, {
+            this._input.setCssStyles({
                 flex: "1",
                 height: (PILL_H - 8) + "px",   // 比 pill 稍矮，视觉对称
                 margin: "0",
@@ -342,7 +342,7 @@ _buildShell(rgb) {
 
             // 右侧圆形搜索按钮
             this._goBtn = createEl("button");
-            Object.assign(this._goBtn.style, {
+            this._goBtn.setCssStyles({
                 flexShrink: "0",
                 width: BTN_SIZE + "px",
                 height: BTN_SIZE + "px",
@@ -359,12 +359,12 @@ _buildShell(rgb) {
                 touchAction: "manipulation"
             });
             const goIconEl = this._goBtn.createSpan();
-            Object.assign(goIconEl.style, { display: "inline-flex", alignItems: "center" });
+            goIconEl.setCssStyles({ display: "inline-flex", alignItems: "center" });
             this._setIcon(goIconEl, "search", PILL_ICON_SIZE);
 
             // 搜索选项按钮（矩形圆角，图标+文字，点击打开选项面板）
             this._contentToggleBtn = createEl("button");
-            Object.assign(this._contentToggleBtn.style, {
+            this._contentToggleBtn.setCssStyles({
                 flexShrink: "0",
                 height: BTN_SIZE + "px",
                 width: "auto",
@@ -382,25 +382,24 @@ _buildShell(rgb) {
                 transition: "background 0.15s, color 0.15s, border-color 0.15s",
                 touchAction: "manipulation"
             });
-            // 用 setProperty("important") 覆盖主题对 button 的 border-radius !important 规则
-            this._contentToggleBtn.style.setProperty("border-radius", "100px", "important");
+            this._contentToggleBtn.addClass('primecore-search-options');
             const contentToggleIconEl = this._contentToggleBtn.createSpan();
-            Object.assign(contentToggleIconEl.style, { display: "inline-flex", alignItems: "center", pointerEvents: "none" });
+            contentToggleIconEl.setCssStyles({ display: "inline-flex", alignItems: "center", pointerEvents: "none" });
             this._setIcon(contentToggleIconEl, "radar", PILL_ICON_SIZE);
             this._contentToggleIconEl = contentToggleIconEl;  // 供预设图标更新使用
             const contentToggleLabelEl = this._contentToggleBtn.createSpan({ text: "搜索选项" });
-            Object.assign(contentToggleLabelEl.style, { pointerEvents: "none", lineHeight: "1" });
+            contentToggleLabelEl.setCssStyles({ pointerEvents: "none", lineHeight: "1" });
             this._contentToggleLabelEl = contentToggleLabelEl;  // 保留引用供预设名更新
             // 状态图标容器：预设（图标+文字）之后，仅图标显示已开启的专项搜索，见 _refreshContentToggleStatus
             // 分隔符：左侧（预设名/搜索选项）与右侧状态图标之间的竖线，仅在右侧有图标时显示
             // 高度略低于状态图标（16px）以显轻量
             this._contentStatusSep = this._contentToggleBtn.createSpan();
-            Object.assign(this._contentStatusSep.style, {
+            this._contentStatusSep.setCssStyles({
                 display: "none", width: "1px", height: "14px", flexShrink: "0",
                 background: "var(--background-modifier-border)", margin: "0 1px", pointerEvents: "none"
             });
             this._contentStatusEl = this._contentToggleBtn.createSpan();
-            Object.assign(this._contentStatusEl.style, {
+            this._contentStatusEl.setCssStyles({
                 display: "inline-flex", alignItems: "center", gap: "3px",
                 pointerEvents: "none", marginLeft: "2px"
             });
@@ -413,7 +412,7 @@ _buildShell(rgb) {
 
             // 清除按钮：goBtn 右侧，有内容时出现，点击清空搜索词
             this._clearBtn = this._inputRow.createEl("button");
-            Object.assign(this._clearBtn.style, {
+            this._clearBtn.setCssStyles({
                 flexShrink: "0",
                 display: "none",
                 alignItems: "center",
@@ -431,7 +430,7 @@ _buildShell(rgb) {
             });
             this._clearBtn.setAttribute("aria-label", "清除搜索词");
             const clearIconEl = this._clearBtn.createSpan();
-            Object.assign(clearIconEl.style, { display: "inline-flex", alignItems: "center", pointerEvents: "none" });
+            clearIconEl.setCssStyles({ display: "inline-flex", alignItems: "center", pointerEvents: "none" });
             this._setIcon(clearIconEl, "x", 15);
             [this._scopeBtn, this._goBtn, this._contentToggleBtn, this._clearBtn]
                 .forEach(button => this._setSearchButtonBackground(button));
@@ -463,7 +462,7 @@ _buildDropdown() {
             // 挂到 body，脱离 overflow 裁剪链；data-sb-float 用于下次渲染时批量清除
             this._dropdown = (this.presentation==='page'?this._wrap:document.body).createDiv({cls:'primecore-results'});
             if(this.presentation!=='page')this._dropdown.setAttribute('data-sb-float','1');
-            Object.assign(this._dropdown.style, {
+            this._dropdown.setCssStyles({
                 position: "fixed", zIndex: "9100",
                 background: "var(--background-primary)",
                 border: "1px solid var(--background-modifier-border)",
@@ -473,7 +472,7 @@ _buildDropdown() {
             });
             if(this.presentation==='page') {
                 this._wrap.addClass('primecore-search-page');this._dropdown.addClass('primecore-results-inline');
-                Object.assign(this._dropdown.style,{position:'relative',zIndex:'auto',boxShadow:'none',minWidth:'0'});
+                this._dropdown.setCssStyles({position:'relative',zIndex:'auto',boxShadow:'none',minWidth:'0'});
             }
             this._listen(this._dropdown, "pointerdown", () => {if(this.presentation!=='page')this._raiseFloat(this._dropdown);}, { passive: true });
             // 结果/历史下拉内的触摸手势先收起输入法（见 _guardLayerKeyboard）
@@ -484,7 +483,7 @@ _buildDropdown() {
             // Universal top bar (occupies layout space; does not scroll with the content). Left = context,
             // right = actions. The left side is rebuilt on every render by _prepBar().
             const _dropTopBar = this._dropdown.createDiv({cls:'primecore-results-toolbar'});
-            Object.assign(_dropTopBar.style, {
+            _dropTopBar.setCssStyles({
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "space-between",
@@ -500,14 +499,14 @@ _buildDropdown() {
             });
             // 左区（上下文，渲染时重建）；不收缩，让顶栏整体溢出并可横向滚动
             const _barLeft = _dropTopBar.createDiv();
-            Object.assign(_barLeft.style, {
+            _barLeft.setCssStyles({
                 display: "flex", alignItems: "center", gap: "6px",
                 minWidth: "0", flex: "0 0 auto"
             });
             this._barLeft = _barLeft;
             // 右区（操作按钮，常驻节点，仅切换显隐）
             const _dropCornerBtnRow = _dropTopBar.createDiv();
-            Object.assign(_dropCornerBtnRow.style, {
+            _dropCornerBtnRow.setCssStyles({
                 display: "flex", alignItems: "center", gap: "4px", flexShrink: "0"
             });
 
@@ -515,40 +514,40 @@ _buildDropdown() {
 
             // 清除当前页历史按钮
             const _clearHistoryBtn = _dropCornerBtnRow.createEl("button");
-            Object.assign(_clearHistoryBtn.style, {
+            _clearHistoryBtn.setCssStyles({
                 width: "24px", height: "24px", borderRadius: "6px", border: "none",
                 background: "transparent", cursor: "pointer", padding: "0",
                 display: "none", alignItems: "center", justifyContent: "center",
                 transition: "background 0.1s", color: "var(--text-muted)"
             });
             const _clearHistoryIconSpan = _clearHistoryBtn.createSpan();
-            Object.assign(_clearHistoryIconSpan.style, { display: "inline-flex", alignItems: "center", pointerEvents: "none" });
+            _clearHistoryIconSpan.setCssStyles({ display: "inline-flex", alignItems: "center", pointerEvents: "none" });
             this._setIcon(_clearHistoryIconSpan, "trash-2", 13);
             _clearHistoryBtn.title = "清除当前页历史记录";
-            this._listen(_clearHistoryBtn, "mouseenter", () => { _clearHistoryBtn.style.background = "var(--background-modifier-hover)"; });
-            this._listen(_clearHistoryBtn, "mouseleave", () => { _clearHistoryBtn.style.background = "transparent"; });
+            this._listen(_clearHistoryBtn, "mouseenter", () => { _clearHistoryBtn.setCssStyles({background: "var(--background-modifier-hover)"}); });
+            this._listen(_clearHistoryBtn, "mouseleave", () => { _clearHistoryBtn.setCssStyles({background: "transparent"}); });
             this._clearHistoryBtn = _clearHistoryBtn;
 
             // Obsidian 搜索按钮
             const _cornerBtnEl = _dropCornerBtnRow.createEl("button");
-            Object.assign(_cornerBtnEl.style, {
+            _cornerBtnEl.setCssStyles({
                 width: "24px", height: "24px", borderRadius: "6px", border: "none",
                 background: "transparent", cursor: "pointer", padding: "0",
                 display: "flex", alignItems: "center", justifyContent: "center",
                 transition: "background 0.1s", color: "var(--text-muted)"
             });
             const _cornerIconSpan = _cornerBtnEl.createSpan();
-            Object.assign(_cornerIconSpan.style, { display: "inline-flex", alignItems: "center", pointerEvents: "none" });
+            _cornerIconSpan.setCssStyles({ display: "inline-flex", alignItems: "center", pointerEvents: "none" });
             this._setIcon(_cornerIconSpan, "maximize-2", 13);
             _cornerBtnEl.addClass('primecore-hover-action');
             _cornerBtnEl.createSpan({cls:'primecore-action-label',text:'在搜索页打开'});
             _cornerBtnEl.addClass("primecore-open-results-page");
-            _cornerBtnEl.style.width="auto";
-            _cornerBtnEl.style.gap="4px";
+            _cornerBtnEl.setCssStyles({width: "auto"});
+            _cornerBtnEl.setCssStyles({gap: "4px"});
             _cornerBtnEl.title = "在搜索页打开";
             _cornerBtnEl.setAttribute("aria-label","在搜索页打开");
-            this._listen(_cornerBtnEl, "mouseenter", () => { _cornerBtnEl.style.background = "var(--background-modifier-hover)"; });
-            this._listen(_cornerBtnEl, "mouseleave", () => { _cornerBtnEl.style.background = "transparent"; });
+            this._listen(_cornerBtnEl, "mouseenter", () => { _cornerBtnEl.setCssStyles({background: "var(--background-modifier-hover)"}); });
+            this._listen(_cornerBtnEl, "mouseleave", () => { _cornerBtnEl.setCssStyles({background: "transparent"}); });
             const cornerBtnHandler = this._makeTouchHandler((e) => { e.stopPropagation(); this._openResultsPage(); });
             this._listen(_cornerBtnEl, "touchstart", cornerBtnHandler.onTouchStart, { passive: true });
             this._listen(_cornerBtnEl, "touchend", (e) => { e.stopPropagation(); cornerBtnHandler.onTouchEnd(e); });
@@ -557,6 +556,6 @@ _buildDropdown() {
 
             // 内部可滚动容器
             this._dropdownInner = this._dropdown.createDiv({attr:{id:'primecore-results-'+crypto.randomUUID()}});
-            Object.assign(this._dropdownInner.style, { overflowY: this.presentation==='page'?'visible':'auto', maxHeight: this.presentation==='page'?'none':'400px' });
+            this._dropdownInner.setCssStyles({ overflowY: this.presentation==='page'?'visible':'auto', maxHeight: this.presentation==='page'?'none':'400px' });
         }
 };

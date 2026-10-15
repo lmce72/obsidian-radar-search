@@ -1,13 +1,14 @@
 {
   "name": "obsidian-radar-search",
-  "version": "1.3.2",
+  "version": "1.3.3",
   "private": true,
   "type": "module",
   "scripts": {
     "build": "bun scripts/build.ts",
     "test": "bun test --timeout 5000",
     "typecheck": "tsc --noEmit",
-    "check": "bun run typecheck && bun scripts/check.ts",
+    "lint": "eslint src --max-warnings 0",
+    "check": "bun run typecheck && bun run lint && bun scripts/check.ts",
     "release:check": "bun scripts/release-check.ts"
   },
   "engines": {
@@ -33,8 +34,11 @@
   "devDependencies": {
     "@types/bun": "^1.4.3",
     "@types/picomatch": "4.0.3",
+    "eslint": "9.39.5",
+    "eslint-plugin-obsidianmd": "0.4.2",
     "obsidian": "1.13.1",
-    "typescript": "6.0.3"
+    "typescript": "6.0.3",
+    "typescript-eslint": "8.71.2"
   },
   "dependencies": {
     "picomatch": "4.0.7"
