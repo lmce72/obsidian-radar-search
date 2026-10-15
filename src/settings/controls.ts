@@ -4,12 +4,12 @@ import { PLUGIN_ICON_ID } from '../shared/plugin-icon.ts';
 const TITLE_ICONS = {
   '设置':'settings-2','搜索栏':PLUGIN_ICON_ID,'Vault 搜索':'vault','互联网搜索':'globe','历史与索引':'history',
   '搜索预设':'sliders-horizontal','搜索引擎':'compass','互联网信息源':'rss','索引选项':'database',
-  '排除路径':'folder-minus','结果分组展开状态':'list-tree','Vault 搜索选项':'sliders-horizontal','路径列表':'folder'
+  '临时过滤器':'filter','结果排序':'arrow-down-up','保存搜索预设':'save','排除路径':'folder-minus','Vault 搜索选项':'sliders-horizontal','路径列表':'folder'
 };
 export function renderSettingTitle(element:HTMLElement,title:string) {
   element.empty();if(!title)return;
   const icon=element.createSpan({cls:'primecore-settings-title-icon',attr:{'aria-hidden':'true'}});
-  setIcon(icon,TITLE_ICONS[title]||(title.endsWith(' · 路径')?'folder':'settings-2'));
+  setIcon(icon,TITLE_ICONS[title]||(title.endsWith(' · 路径')?'folder':title.endsWith(' · 过滤规则')?'filter':'settings-2'));
   element.createSpan({text:title});
 }
 

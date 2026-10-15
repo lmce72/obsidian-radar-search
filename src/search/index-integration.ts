@@ -1,6 +1,7 @@
+import {excludedByFilter} from './path-filter.ts';
 import * as Obsidian from 'obsidian';
 import { moment } from '../shared/moment.ts';
-import { SHEET_BREAKPOINT, MIN_PANEL_H, PILL_ICON_SIZE, COLLAPSIBLE_GROUPS, DEFAULT_EXPANDED_GROUPS, GROUP_ICON, EXT_ICON } from '../shared/constants.ts';
+import { SHEET_BREAKPOINT, MIN_PANEL_H, PILL_ICON_SIZE, EXT_ICON } from '../shared/constants.ts';
 import { IconRenderer } from '../shared/icons.ts';
 import { makeTouchHandler } from '../shared/touch.ts';
 
@@ -21,18 +22,8 @@ _indexEngine() {
         }
 
 _excludedPredicate() {
-            let excluded = this.cfg.excludePaths || [];
-            let presetMode = "黑名单";
-            if (this._selectedPreset) {
-                const preset = (this.cfg.searchPresets || []).find(p => p.name === this._selectedPreset);
-                if (preset?.excludeFolders?.length) {
-                    excluded = preset.excludeFolders;
-                    presetMode = preset.mode || "黑名单";
-                }
-            }
-            const pathOf = (x) => (typeof x === "string" ? x : (x && x.path) || "");
-            if (presetMode === "白名单") return (x) => excluded.length > 0 && !excluded.some(p => pathOf(x).startsWith(p));
-            return (x) => excluded.some(p => pathOf(x).startsWith(p));
+            const preset=this.cfg.searchPresets.find(p=>p.name===this._selectedPreset);
+            return excludedByFilter(this._temporaryFilter||{mode:preset?.mode||'黑名单',paths:preset?.excludeFolders||this.cfg.excludePaths});
         }
 
 _indexQuery(q) {
@@ -57,7 +48,7 @@ _itemsFromEngineHits(rows, terms) {
                 const f = this.app.vault.getAbstractFileByPath(r.path);
                 if (!f) continue;
                 out.push({
-                    label: this._fileLabel(f),
+                    path:f.path,label: this._fileLabel(f),
                     sub: f.parent?.path || "/",
                     terms,
                     twoLine: true,

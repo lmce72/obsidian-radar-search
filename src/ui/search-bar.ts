@@ -15,12 +15,16 @@ import { withInteractions } from '../ui/interactions.ts';
 import { withMetadataSearch } from '../search/metadata-search.ts';
 import { withHistory } from '../history/history-behavior.ts';
 import { withEvents } from '../ui/events.ts';
+import {withResultTools} from './result-tools.ts';
 import {withResultPresentation} from './result-presentation.ts';
-type SearchBarBehavior = Component & {render():Promise<void>;_focusInput():void;_teardownIndexFlush():void;getSearchSession():SearchSession;applySearchSession(session:SearchSession):Promise<void>};
-const Behavior = [withResultPresentation, withLayout, withPanel, withWebOptions, withNavigation, withResults, withSnippets, withIndexIntegration, withVaultSearch, withGlobalSearch, withWebSearch, withInteractions, withMetadataSearch, withHistory, withEvents].reduce<unknown>((Base, mixin) => mixin(Base), Component) as new () => SearchBarBehavior;
+type SearchBarBehavior = Component & {render():Promise<void>;_focusInput():void;_teardownIndexFlush():void;_returnToResults():void;getSearchSession():SearchSession;applySearchSession(session:SearchSession):Promise<void>};
+const Behavior = [withResultTools, withResultPresentation, withLayout, withPanel, withWebOptions, withNavigation, withResults, withSnippets, withIndexIntegration, withVaultSearch, withGlobalSearch, withWebSearch, withInteractions, withMetadataSearch, withHistory, withEvents].reduce<unknown>((Base, mixin) => mixin(Base), Component) as new () => SearchBarBehavior;
 export class SearchBarComponent extends Behavior {
   declare presentation:'floating'|'page';
   declare _resultCategory:ResultCategory;
+  declare _resultCategoryChosen:boolean;
+  declare _resultToolView:'results'|'sort'|'filter'|'presetName';
+  declare _temporaryFilter:import('../types.ts').PathFilter|null;
   declare _resultKind:'results'|'history';
   declare _webSearchVer:number;
   declare _sourceEditor:HTMLElement;
@@ -67,7 +71,6 @@ export class SearchBarComponent extends Behavior {
   declare _historyPageSize;
   declare _showAllHistory;
   declare _groupPages;
-  declare _groupState;
   declare _lastGroups;
   declare _dropdownPageSize;
   declare _wrap;
@@ -93,7 +96,8 @@ constructor(plugin:RadarSearchPlugin, container:HTMLElement, options:SearchMount
             const cfg = structuredClone(plugin.settings);
             this.plugin = plugin;
             this.presentation=options.presentation||'floating';
-            this._resultCategory='all';
+            this._resultCategory='files';
+            this._resultCategoryChosen=false;
             this._disposed = false;
             this._timers = new Set();
             this._frames = new Set();
@@ -167,9 +171,6 @@ constructor(plugin:RadarSearchPlugin, container:HTMLElement, options:SearchMount
             // 下拉分组分页状态（Map: groupKey → currentPage）
             this._groupPages      = new Map();
             // 分组展开状态（标题 → 是否展开）与最近一次分组快照（供展开/收起后重渲染）
-            this._groupState = (cfg.resultGroupState && typeof cfg.resultGroupState === "object" && !Array.isArray(cfg.resultGroupState))
-                ? Object.assign({}, cfg.resultGroupState)
-                : {};
             this._lastGroups = null;
             this._dropdownPageSize = Number(cfg.dropdownPageSize) || 10;
 

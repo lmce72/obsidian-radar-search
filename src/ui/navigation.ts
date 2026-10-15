@@ -1,6 +1,6 @@
 import * as Obsidian from 'obsidian';
 import { moment } from '../shared/moment.ts';
-import { SHEET_BREAKPOINT, MIN_PANEL_H, PILL_ICON_SIZE, COLLAPSIBLE_GROUPS, DEFAULT_EXPANDED_GROUPS, GROUP_ICON, EXT_ICON } from '../shared/constants.ts';
+import { SHEET_BREAKPOINT, MIN_PANEL_H, PILL_ICON_SIZE, EXT_ICON } from '../shared/constants.ts';
 import { IconRenderer } from '../shared/icons.ts';
 import { makeTouchHandler } from '../shared/touch.ts';
 
@@ -67,46 +67,8 @@ _flattenBookmarks(items) {
             return result;
         }
 
-_buildSortSelect(q) {
-            const SORT_LABELS = {
-                // 「相关度」为默认：索引引擎的 BM25 排序。引擎未就绪时 _sortFiles 按最近编辑兜底。
-                // Relevance is the default — the engine's BM25 ordering; _sortFiles falls back to
-                // recency while the index is not ready.
-                "relevance":  "相关度",
-                "mtime-desc": "最近编辑",
-                "mtime-asc":  "最早编辑",
-                "alpha-asc":  "名称 A→Z",
-                "alpha-desc": "名称 Z→A",
-                "ctime-desc": "最近创建",
-                "ctime-asc":  "最早创建",
-            };
-            const sel = createEl("select");
-            Object.assign(sel.style, {
-                fontSize: "11px",
-                border: "1px solid var(--background-modifier-border)",
-                borderRadius: "100px",
-                background: "var(--background-secondary)",
-                color: "var(--text-muted)",
-                padding: "1px 3px",
-                cursor: "pointer",
-                maxWidth: "90px"
-            });
-            for (const [val, label] of Object.entries(SORT_LABELS)) {
-                const opt = sel.createEl("option", { value: val, text: label });
-                opt.value = val;
-                if (val === this._vaultSortMode) opt.selected = true;
-            }
-            this._listen(sel, "mousedown", (e) => e.stopPropagation());
-            this._listen(sel, "change", (e) => {
-                this._vaultSortMode = e.target.value;
-                this._saveCfgKey("vaultSortMode", this._vaultSortMode);
-                if (q) this._doSearch(q);
-            });
-            return sel;
-        }
-
 _selectMode(mode,runSearch=true) {
-            if(this._mode!==mode)this._resultCategory='all';
+            if(this._mode!==mode) {this._resultCategory='files';this._resultCategoryChosen=false;}
             this._mode = mode;
             this._syncSearchAction();
             const mcfg = this._modeConfig()[mode];
@@ -160,7 +122,7 @@ _showDropdown() {
                 this._closePanel({ restoreDropdown: false });
             }
             this._dropdown.style.display = "block";
-            if(this.presentation!=='page') {this._raiseFloat(this._dropdown);this._startReposition();}
+            if(this.presentation!=='page') {this._raiseFloat(this._dropdown);this._repositionFloats();this._startReposition();}
         }
 
 _hideDropdown() {
@@ -292,14 +254,14 @@ _prepBar(kind) {
                 if (!el) return;
                 const isHistory = kind === "history";
                 if(isHistory)el.empty();
-                this._resultKind=kind;
+                this._resultKind=kind;this._syncResultTools(isHistory);
                 // 右区按钮显隐：清除历史只在历史视图；在 Obsidian 打开只在结果视图（历史视图里没有查询词）
                 if (this._clearHistoryBtn) this._clearHistoryBtn.style.display = "none";
                 if (this._cornerBtnEl) this._cornerBtnEl.style.display = isHistory || this.presentation==='page' ? "none" : "flex";
                 if(isHistory) {el.removeClass('primecore-result-tabs');el.removeAttribute('role');el.removeAttribute('aria-label');this._dropdownInner.removeAttribute('role');}
                 else this._dropdownInner.setAttribute('role','tabpanel');
                 if (isHistory) {
-                    if (this._toggleAllBtn) this._toggleAllBtn.style.display = "none";
+                    this._syncResultTools(true);
                     return;
                 }
                 this._renderResultCategories();

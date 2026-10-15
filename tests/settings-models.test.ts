@@ -28,10 +28,9 @@ test('invalid rows are blocked and draft changes never mutate saved settings',()
   const paths=new CollectionDraft('excludePaths',['Archive']);paths.add();expect(()=>paths.collect()).toThrow('删除空行');
   paths.rows[1].value='Archive';expect(()=>paths.collect()).toThrow('重复');
 });
-test('group editor includes default groups and preserves custom keys',()=>{
-  const fields=booleanFields('resultGroupState',{'Custom group':true});
-  expect(fields.some(field=>field.key==='Vault 文件'&&field.default)).toBe(true);
-  expect(fields.some(field=>field.key==='Custom group')).toBe(true);
+test('boolean editor is limited to the active index model',()=>{
+  expect(booleanFields('searchIndex',{})).toHaveLength(4);
+  expect(()=>booleanFields('resultGroupState',{})).toThrow('未知开关模型');
 });
 test('consolidated settings keep every current field reachable exactly once',()=>{
   const main=SETTINGS_GROUPS.flatMap(([,keys])=>keys);

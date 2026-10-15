@@ -1,8 +1,8 @@
 {
   "id": "primecore-search",
   "name": "Radar Search",
-  "version": "1.1.0",
-  "minAppVersion": "1.5.0",
+  "version": "1.2.0",
+  "minAppVersion": "1.6.6",
   "description": "Unified vault, command, property, link, and web search, with CJK full-text indexing and a floating search bar.",
   "author": "CoreVortex",
   "isDesktopOnly": false

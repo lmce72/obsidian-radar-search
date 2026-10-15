@@ -1,3 +1,4 @@
+import {isDirectorySuggestion} from './directory-suggest.ts';
 import { Component } from 'obsidian';
 import type RadarSearchPlugin from '../main.ts';
 
@@ -53,11 +54,14 @@ export class FloatingSearch extends Component {
     });
     this.registerDomEvent(this.document, 'keydown', event => {
       if (event.key !== 'Escape') return;
-      event.preventDefault();
-      event.stopPropagation();
-      this.close();
+      const component=this.plugin.components.get(this.contentEl)?.component;
+      if(this.document.querySelector('.suggestion-container:has(.primecore-folder-suggestion)'))return;
+      event.preventDefault();event.stopPropagation();
+      if(component?._resultToolView&&component._resultToolView!=='results')component._returnToResults();
+      else this.close();
     }, true);
     this.registerDomEvent(this.document, 'pointerdown', event => {
+      if(isDirectorySuggestion(event.target))return;
       const component = this.plugin.components.get(this.contentEl)?.component;
       const layers = [this.contentEl, component?._dropdown, component?._scopeMenu,
         component?._vaultSearchPanel, component?._panelMask, component?._sourceEditor];

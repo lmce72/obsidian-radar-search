@@ -1,3 +1,5 @@
+import {DirectorySuggest} from '../ui/directory-suggest.ts';
+import {FILTER_EXAMPLES,FILTER_HELP,compilePathRule} from '../search/path-filter.ts';
 import type {SettingsForm} from './form.ts';
 import { Setting, TextComponent, DropdownComponent, ToggleComponent, TFolder } from 'obsidian';
 import { IconRenderer } from '../shared/icons.ts';
@@ -54,13 +56,25 @@ export class StringListEditor {
   declare root;
   declare toolbar;
   declare body;
+  declare app;
+  declare onExample;
+  declare suggesters:DirectorySuggest[];
 
-  constructor(parent,{value,onChange,placeholder='例如：Projects/Archive',options=undefined,folders=[],toolbar=undefined,showToolbar=true}) {
+  dispose(){this.suggesters?.forEach(s=>s.close());this.suggesters=[];}
+  constructor(parent,{value,onChange,placeholder='例如：Projects/Archive',options=undefined,folders=[],toolbar=undefined,showToolbar=true,app=undefined,onExample=undefined}) {
+    this.app=app;this.onExample=onExample;this.suggesters=[];
     this.value=structuredClone(value);this.onChange=onChange;this.placeholder=placeholder;this.options=options;this.folders=folders;
     this.root=parent.createDiv();
     if(showToolbar) {
       this.toolbar=toolbar||new ActionToolbar(this.root,'路径列表');
       this.toolbar.prepend(this.toolbar.add('plus','添加一项',()=>this.add()));
+    }
+    if(!options) {
+      this.root.createDiv({cls:'setting-item-description',text:FILTER_HELP});
+      new Setting(this.root).setName('添加常用规则').addDropdown(control=>{
+        control.addOption('','选择规则示例…');FILTER_EXAMPLES.forEach((example,i)=>control.addOption(String(i),example.label));
+        control.onChange(value=>{if(value==='')return;const example=FILTER_EXAMPLES[Number(value)];this.value.push(example.pattern);this.onChange([...this.value]);control.setValue('');this.render();this.onExample?.(example);});
+      });
     }
     this.body=this.root.createDiv();this.render();
   }
@@ -70,7 +84,7 @@ export class StringListEditor {
     const inputs=this.body.querySelectorAll('input');inputs[inputs.length-1]?.focus();
   }
   render() {
-    this.body.empty();const listId=`primecore-paths-${crypto.randomUUID()}`;
+    this.dispose();this.body.empty();const listId=`primecore-paths-${crypto.randomUUID()}`;
     if(!this.options&&this.folders.length) {
       const list=this.body.createEl('datalist',{attr:{id:listId}});
       this.folders.forEach(folder=>list.createEl('option',{attr:{value:folder}}));
@@ -84,7 +98,8 @@ export class StringListEditor {
       else row.addText(control=>{
         control.setValue(value).setPlaceholder(this.placeholder).onChange(change);
         control.inputEl.setAttribute('aria-label',`第 ${index+1} 项路径`);
-        if(this.folders.length)control.inputEl.setAttribute('list',listId);
+        if(this.app)this.suggesters.push(new DirectorySuggest(this.app,control.inputEl,change));
+        else if(this.folders.length)control.inputEl.setAttribute('list',listId);
       });
       new ActionButton(row.controlEl,{icon:'trash-2',label:'删除',onClick:()=>{this.value.splice(index,1);this.onChange([...this.value]);this.render();}});
     });
@@ -101,7 +116,12 @@ export class CollectionEditor extends ModelEditor {
       if(this.draft.spec.strings)this.listEditor.add();
       else {this.draft.add();this.setDirty();this.render();this.body.querySelector<HTMLInputElement>('tbody tr:last-child input')?.focus();}
     });
-    this.toolbar.prepend(add);this.render();
+    this.toolbar.prepend(add);
+    if(key==='searchPresets') {const common=new Setting(this.root).setName('添加常用预设').addDropdown(control=>{
+      control.addOption('','选择常用预设…');FILTER_EXAMPLES.forEach((example,i)=>control.addOption(String(i),example.label));
+      control.onChange(value=>{if(value==='')return;const example=FILTER_EXAMPLES[Number(value)],row=this.draft.add();row.value={name:example.label,mode:example.mode,excludeFolders:[example.pattern],icon:'filter'};control.setValue('');this.setDirty();this.render();});
+    });this.root.insertBefore(common.settingEl,this.body);}
+    this.render();
   }
   reset() {this.draft=new CollectionDraft(this.key,this.tab.plugin.settings[this.key]);}
   changes() {return this.draft.changes(this.tab.plugin.settings);}
@@ -109,7 +129,7 @@ export class CollectionEditor extends ModelEditor {
   render() {
     this.body.empty();const spec=this.draft.spec;
     if(spec.strings) {
-      this.listEditor=new StringListEditor(this.body,{value:this.draft.rows.map(row=>row.value),placeholder:spec.placeholder,options:spec.options,folders:spec.options?[]:this.folders(),showToolbar:false,onChange:value=>{this.draft.rows=value.map(item=>({original:null,value:item}));this.setDirty();}});return;
+      this.listEditor=new StringListEditor(this.body,{value:this.draft.rows.map(row=>row.value),app:this.tab.app,placeholder:spec.placeholder,options:spec.options,folders:spec.options?[]:this.folders(),showToolbar:false,onChange:value=>{this.draft.rows=value.map(item=>({original:null,value:item}));this.setDirty();}});return;
     }
     const scroll=this.body.createDiv();scroll.style.overflowX='auto';
     const table=scroll.createEl('table');table.style.width='100%';
@@ -145,17 +165,18 @@ export class CollectionEditor extends ModelEditor {
       const control=new DropdownComponent(cell).addOptions(field.options).setValue(row.value[field.key]).onChange(change);control.selectEl.setAttribute('aria-label',label);return;
     }
     if(field.type==='paths') {
-      const button=new ActionButton(cell,{icon:'folder',label:`编辑路径（${row.value[field.key].length}）`});
+      const button=new ActionButton(cell,{icon:'folder',label:`编辑规则（${row.value[field.key].length}）`});
       button.onClick(()=>{
         let draft=structuredClone(row.value[field.key]);
         this.tab.navigation.push({
-          title:`${row.value.name||'搜索预设'} · 路径`,
-          render:(parent,view)=>new StringListEditor(parent,{value:draft,toolbar:view.toolbar,folders:this.folders(),onChange:value=>{draft=value;}}),
+          title:`${row.value.name||'搜索预设'} · 过滤规则`,
+          render:(parent,view)=>new StringListEditor(parent,{app:this.tab.app,value:draft,toolbar:view.toolbar,folders:this.folders(),onChange:value=>{draft=value;}}),
           apply:()=>{
             const paths=draft.map(path=>path.trim());
             if(paths.some(path=>!path))throw new Error('请填写路径或删除空行。');
             if(new Set(paths).size!==paths.length)throw new Error('路径重复，请合并或删除。');
-            change(paths);button.setButtonText(`编辑路径（${paths.length}）`);
+            paths.forEach(compilePathRule);
+            change(paths);button.setButtonText(`编辑规则（${paths.length}）`);
           }
         });
       });return;

@@ -1,6 +1,8 @@
+import {sortSearchItems} from '../search/sort.ts';
+import type {SearchItem} from '../types.ts';
 import * as Obsidian from 'obsidian';
 import { moment } from '../shared/moment.ts';
-import { SHEET_BREAKPOINT, MIN_PANEL_H, PILL_ICON_SIZE, COLLAPSIBLE_GROUPS, DEFAULT_EXPANDED_GROUPS, GROUP_ICON, EXT_ICON } from '../shared/constants.ts';
+import { SHEET_BREAKPOINT, MIN_PANEL_H, PILL_ICON_SIZE, EXT_ICON } from '../shared/constants.ts';
 import { IconRenderer } from '../shared/icons.ts';
 import { makeTouchHandler } from '../shared/touch.ts';
 
@@ -106,57 +108,9 @@ _mkPagerBar(parent, opts) {
             }
         }
 
-_isGroupExpanded(title) {
-            if (Object.prototype.hasOwnProperty.call(this._groupState, title)) return !!this._groupState[title];
-            return DEFAULT_EXPANDED_GROUPS.has(title);
-        }
-
-_collapsibleTitlesInResults() {
-            return [...new Set((this._lastGroups || [])
-                .map(g => g.title)
-                .filter(t => t && COLLAPSIBLE_GROUPS.has(t)))];
-        }
-
-_toggleResultGroup(title) {
-            try {
-                if (!title || !COLLAPSIBLE_GROUPS.has(title)) return;
-                this._groupState[title] = !this._isGroupExpanded(title);
-                this._saveCfgKey("resultGroupState", this._groupState);
-                if (this._lastGroups) this._renderDropdown(this._lastGroups);
-            } catch (e) {
-                this._log("error", "[SearchBar] 切换分组展开状态失败:", e);
-            }
-        }
-
-_toggleAllResultGroups() {
-            try {
-                const titles = this._collapsibleTitlesInResults() as string[];
-                if (titles.length === 0) return;
-                const expandAll = !titles.every(t => this._isGroupExpanded(t));
-                for (const t of titles) this._groupState[t] = expandAll;
-                this._saveCfgKey("resultGroupState", this._groupState);
-                if (this._lastGroups) this._renderDropdown(this._lastGroups);
-            } catch (e) {
-                this._log("error", "[SearchBar] 全部展开/收起失败:", e);
-            }
-        }
-
-_refreshToggleAllBtn() {
-            try {
-                if (!this._toggleAllBtn || !this._toggleAllIconSpan) return;
-                if(this._resultCategory!=='all') {this._toggleAllBtn.style.display='none';return;}
-                const titles = this._collapsibleTitlesInResults();
-                if (titles.length === 0) { this._toggleAllBtn.style.display = "none"; return; }
-                const allExpanded = titles.every(t => this._isGroupExpanded(t));
-                this._toggleAllBtn.style.display = "flex";
-                this._toggleAllBtn.title = allExpanded ? "全部收起" : "全部展开";
-                this._setIcon(this._toggleAllIconSpan, allExpanded ? "fold-vertical" : "unfold-vertical", 13);
-            } catch (e) {
-                this._log("error", "[SearchBar] 刷新全部展开/收起按钮失败:", e);
-            }
-        }
-
 _renderDropdown(groups) {
+            this._lastGroups=groups;
+            if(this._resultToolView!=='results')return;
             this._dropdownInner.empty();
             this._itemEls = [];
 
@@ -166,10 +120,9 @@ _renderDropdown(groups) {
             const visibleGroups=this._visibleResultGroups(groups);
             const allGroups=groups;
             groups=visibleGroups;
-            const showTitles = groups.length > 1 || (groups.length === 1 && groups[0].title);
             if(!groups.some(group=>group.items.length)) {
                 this._dropdownInner.createDiv({cls:'primecore-results-empty',text:'没有匹配的结果'});
-                this._refreshToggleAllBtn();this._showDropdown();return;
+                this._showDropdown();return;
             }
             for (let gi = 0; gi < groups.length; gi++) {
                 const group    = groups[gi];
@@ -179,68 +132,10 @@ _renderDropdown(groups) {
                 if (!this._groupPages.has(groupKey)) this._groupPages.set(groupKey, 1);
                 const groupPage   = Math.min(this._groupPages.get(groupKey), totalGroupPages);
                 this._groupPages.set(groupKey, groupPage);
-                const slicedItems = group.items.slice((groupPage - 1) * pageSize, groupPage * pageSize);
+                const sortedItems=sortSearchItems<SearchItem>(group.items,this._vaultSortMode,path=>this.app.vault.getAbstractFileByPath(path));
+                const slicedItems = sortedItems.slice((groupPage - 1) * pageSize, groupPage * pageSize);
 
-                // 可折叠分组：标题可点击折叠；收起时跳过条目与分页行
-                const collapsible = this._resultCategory==='all' && !!(group.title && COLLAPSIBLE_GROUPS.has(group.title));
-                const expanded    = this._resultCategory!=='all' || !collapsible || this._isGroupExpanded(group.title);
-
-                if (showTitles && group.title) {
-                    const titleEl = this._dropdownInner.createDiv();
-                    Object.assign(titleEl.style, {
-                        padding: "6px 14px 3px",
-                        fontSize: "11px",
-                        fontWeight: "600",
-                        color: "var(--text-muted)",
-                        textTransform: "uppercase",
-                        letterSpacing: "0.04em",
-                        borderTop: this._itemEls.length > 0 ? "1px solid var(--background-modifier-border)" : "none",
-                        marginTop: this._itemEls.length > 0 ? "4px" : "0",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "space-between"
-                    });
-                    // 左侧：箭头（可折叠时）+ 分组图标 + 标题（+ 收起时的条数徽标）
-                    const leftEl = titleEl.createSpan();
-                    Object.assign(leftEl.style, { display: "flex", alignItems: "center", gap: "5px", minWidth: "0" });
-                    if (collapsible) {
-                        const chevEl = leftEl.createSpan();
-                        Object.assign(chevEl.style, {
-                            display: "inline-flex", alignItems: "center", flexShrink: "0",
-                            transition: "transform 0.15s", transform: expanded ? "rotate(90deg)" : ""
-                        });
-                        this._setIcon(chevEl, "chevron-right", 11);
-                    }
-                    if (collapsible && GROUP_ICON[group.title]) {
-                        const giEl = leftEl.createSpan();
-                        Object.assign(giEl.style, { display: "inline-flex", alignItems: "center", flexShrink: "0" });
-                        this._setIcon(giEl, GROUP_ICON[group.title], 12);
-                    }
-                    leftEl.createSpan({ text: group.title });
-                    if (collapsible && !expanded) {
-                        const badgeEl = leftEl.createSpan({ text: String(group.items.length) });
-                        Object.assign(badgeEl.style, {
-                            flexShrink: "0", fontSize: "10px", padding: "0 5px", lineHeight: "15px",
-                            borderRadius: "8px", background: "var(--background-modifier-border)"
-                        });
-                    }
-                    // 右侧可选控件（如排序选择器）
-                    if (group.sortEl) titleEl.appendChild(group.sortEl);
-
-                    if (collapsible) {
-                        // 必须 stopPropagation：切换会重建下拉内容，节点在处理器执行中脱离文档时
-                        // 文档级「点击外部关闭」会误判为外部点击而收起下拉
-                        const toggleHandler = this._makeTouchHandler((e) => { e.stopPropagation(); this._toggleResultGroup(group.title); });
-                        this._listen(titleEl, "touchstart", toggleHandler.onTouchStart, { passive: true });
-                        this._listen(titleEl, "touchend", (e) => { e.stopPropagation(); toggleHandler.onTouchEnd(e); });
-                        this._listen(titleEl, "click", (e) => { e.stopPropagation(); this._toggleResultGroup(group.title); });
-                        titleEl.style.cursor = "pointer";
-                        this._listen(titleEl, "mouseenter", () => { titleEl.style.color = "var(--text-normal)"; });
-                        this._listen(titleEl, "mouseleave", () => { titleEl.style.color = "var(--text-muted)"; });
-                    }
-                }
-
-                if (!expanded) continue;
+                if(groups.length>1&&group.title)this._dropdownInner.createDiv({cls:'primecore-result-source',text:group.title});
 
                 for (const item of slicedItems) {
                     const idx    = this._itemEls.length;
@@ -425,7 +320,6 @@ _renderDropdown(groups) {
                 }
             }
 
-            this._refreshToggleAllBtn();
             this._showDropdown();
         }
 

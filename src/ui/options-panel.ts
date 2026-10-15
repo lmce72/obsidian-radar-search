@@ -1,6 +1,6 @@
 import * as Obsidian from 'obsidian';
 import { moment } from '../shared/moment.ts';
-import { SHEET_BREAKPOINT, MIN_PANEL_H, PILL_ICON_SIZE, COLLAPSIBLE_GROUPS, DEFAULT_EXPANDED_GROUPS, GROUP_ICON, EXT_ICON } from '../shared/constants.ts';
+import { SHEET_BREAKPOINT, MIN_PANEL_H, PILL_ICON_SIZE, EXT_ICON } from '../shared/constants.ts';
 import { IconRenderer } from '../shared/icons.ts';
 import { makeTouchHandler } from '../shared/touch.ts';
 
@@ -384,6 +384,7 @@ _buildVaultSearchPanel(rgb) {
             _rebuildPresetOptions();
             this._rebuildPresetOptions = _rebuildPresetOptions;
             this._listen(presetSelect, "change", () => {
+                this._temporaryFilter=null;
                 this._selectedPreset = presetSelect.value;
                 this._saveCfgKey("defaultPreset", this._selectedPreset);
                 const preset = (this.cfg.searchPresets || []).find(p => p.name === this._selectedPreset);

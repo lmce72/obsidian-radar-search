@@ -7,7 +7,7 @@ const {createSearchIndexEngine}=await import('../src/search/index-engine.ts');
 const {makeTouchHandler}=await import('../src/shared/touch.ts');
 
 test('normalization preserves current settings and isolates defaults',async()=>{
-  const input={...structuredClone(DEFAULT_SETTINGS),defaultMode:'web',searchPresets:[{name:'Example',mode:'白名单',excludeFolders:['Example'],icon:'files'}],resultGroupState:{'标签匹配':true}};
+  const input={...structuredClone(DEFAULT_SETTINGS),defaultMode:'web',searchPresets:[{name:'Example',mode:'白名单',excludeFolders:['Example'],icon:'files'}]};
   const normalized=normalizeSettings(input);
   for(const key of Object.keys(input))expect(normalized[key]).toEqual(input[key]);
   const copy=normalizeSettings({});copy.engines[0].enabled=false;
@@ -26,9 +26,9 @@ test('settings load only plugin data and save serially',async()=>{
 
 test('obsolete fields are discarded without converting them into current state',async()=>{
   const snapshots=[];
-  const store=new SettingsStore({loadData:async()=>({defaultMode:'web',expandedResultGroups:['标签匹配'],vaultContentSearchMaxFiles:15}),saveData:async data=>snapshots.push(data),report:()=>{}});
+  const store=new SettingsStore({loadData:async()=>({defaultMode:'web',expandedResultGroups:['标签匹配'],vaultContentSearchMaxFiles:15,resultGroupState:{'标签匹配':true}}),saveData:async data=>snapshots.push(data),report:()=>{}});
   await store.load();
-  expect(store.settings.defaultMode).toBe('web');expect(store.settings.resultGroupState).toEqual({});
+  expect(store.settings.defaultMode).toBe('web');expect(store.settings).not.toHaveProperty('resultGroupState');
   expect(store.settings).not.toHaveProperty('expandedResultGroups');expect(store.settings).not.toHaveProperty('vaultContentSearchMaxFiles');
   expect(snapshots.at(-1)).toEqual(store.settings);
   expect(()=>validateSetting('expandedResultGroups',[])).toThrow('未知设置');

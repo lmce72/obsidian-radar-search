@@ -1,3 +1,4 @@
+import {compilePathRule,validatePathFilter} from '../search/path-filter.ts';
 import type {SearchSettings} from '../types.ts';
 export const DEFAULT_SETTINGS: SearchSettings = {
   excludePaths: [], defaultMode: 'vault', placeholderType: 'unified', placeholder: '',
@@ -20,7 +21,6 @@ export const DEFAULT_SETTINGS: SearchSettings = {
     {id:'duckduckgo',name:'DuckDuckGo',url:'https://duckduckgo.com/?q={q}',suggest:'https://duckduckgo.com/ac/?q={q}&type=list',enabled:false},
     {id:'perplexity',name:'Perplexity AI',url:'https://www.perplexity.ai/search?q={q}',suggest:'',enabled:false}
   ],
-  resultGroupState: {},
   searchIndex: {enabled:true,content:true,bigrams:true,debug:false}, debug:false
 };
 
@@ -42,6 +42,8 @@ export function validateSetting(key, value) {
   if (typeof fallback === 'string' && typeof value !== 'string') throw new Error('需要文本');
   if (Array.isArray(fallback) && !Array.isArray(value)) throw new Error('需要 JSON 数组');
   if (key==='excludePaths' && !value.every(item=>typeof item==='string')) throw new Error('每项必须是文本');
+  if(key==='excludePaths')value.forEach(compilePathRule);
+  if(key==='searchPresets')value.forEach(p=>validatePathFilter({mode:p.mode,paths:p.excludeFolders}));
   if (key==='engines') {
     const ids = new Set();
     for (const item of value) {
@@ -52,7 +54,7 @@ export function validateSetting(key, value) {
   if (key==='searchPresets' && !value.every(item=>item && typeof item.name==='string' && item.name && ['白名单','黑名单'].includes(item.mode) && Array.isArray(item.excludeFolders) && item.excludeFolders.every(path=>typeof path==='string') && (item.icon===undefined || typeof item.icon==='string'))) throw new Error('预设需要 name、mode（白名单/黑名单）、excludeFolders 数组及可选 Lucide icon');
   if (key==='webSources' && !value.every(item=>item && typeof item.label==='string' && item.label && typeof item.domain==='string' && /^[a-z0-9.-]+(?::\d+)?(?:\/[^\s]*)?$/i.test(item.domain))) throw new Error('信息源需要 label 和不含协议的 domain');
   if (key==='activeEngineId' && value!==null && typeof value!=='string') throw new Error('引擎 ID 必须是文本或 null');
-  if (['resultGroupState','searchIndex'].includes(key)) {
+  if (key==='searchIndex') {
     if (!value || typeof value!=='object' || Array.isArray(value) || !Object.values(value).every(item=>typeof item==='boolean')) throw new Error('需要布尔值组成的 JSON 对象');
     if (key==='searchIndex' && Object.keys(value).some(key=>!['enabled','content','bigrams','debug'].includes(key))) throw new Error('未知索引选项');
   }

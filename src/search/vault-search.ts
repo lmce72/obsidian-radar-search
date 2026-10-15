@@ -1,6 +1,6 @@
 import * as Obsidian from 'obsidian';
 import { moment } from '../shared/moment.ts';
-import { SHEET_BREAKPOINT, MIN_PANEL_H, PILL_ICON_SIZE, COLLAPSIBLE_GROUPS, DEFAULT_EXPANDED_GROUPS, GROUP_ICON, EXT_ICON } from '../shared/constants.ts';
+import { SHEET_BREAKPOINT, MIN_PANEL_H, PILL_ICON_SIZE, EXT_ICON } from '../shared/constants.ts';
 import { IconRenderer } from '../shared/icons.ts';
 import { makeTouchHandler } from '../shared/touch.ts';
 
@@ -110,7 +110,7 @@ async _searchVault(q) {
 
                 // 将标签匹配单独分组（仅在专项搜索开启或 #tag 格式时）
                 const nameItems = engRows ? this._itemsFromEngineHits(nameRows, terms) : files.map(f => ({
-                    label: this._fileLabel(f),
+                    path:f.path,label: this._fileLabel(f),
                     sub: f.parent?.path || "/",
                     terms,
                     twoLine: true,
@@ -120,8 +120,7 @@ async _searchVault(q) {
 
                 if (this._isVaultStale(ver)) return;
 
-                const sortEl = this._buildSortSelect(q);
-                this._renderDropdown([{ title: "Vault 文件", items: nameItems, sortEl }]);
+                this._renderDropdown([{ title: "Vault 文件", items: nameItems }]);
 
                 // ── 阶段 1.5：专项搜索（metadataCache，同步）──
                 const specialGroups = [];
@@ -129,7 +128,7 @@ async _searchVault(q) {
                 // 标签匹配分组（独立展示）
                 if (shouldSearchTags && tagMatches.length > 0) {
                     const tagItems = tagMatches.map(f => ({
-                        label: f.basename,
+                        path:f.path,label: f.basename,
                         sub: f.parent?.path || "/",
                         terms,
                         twoLine: true,
@@ -146,7 +145,7 @@ async _searchVault(q) {
                         const links = this.app.metadataCache.getFileCache(f)?.links || [];
                         const hit   = links.find(l => _fuzzyFn ? !!_fuzzyFn(l.link) : terms.every(t => l.link.toLowerCase().includes(t)));
                         if (hit) {
-                            wikiItems.push({ label: f.basename, sub: `链接: ${hit.link}`, twoLine: true, icon: this._fileIconName(f), action: () => this._openVaultResult(f.path, f.basename) });
+                            wikiItems.push({ path:f.path,label: f.basename, sub: `链接: ${hit.link}`, twoLine: true, icon: this._fileIconName(f), action: () => this._openVaultResult(f.path, f.basename) });
                             if (wikiItems.length >= 5) break;
                         }
                     }
@@ -161,7 +160,7 @@ async _searchVault(q) {
                         const links = this.app.metadataCache.getFileCache(f)?.links || [];
                         const hit   = links.find(l => /^https?:\/\//.test(l.original || "") && (_fuzzyFn ? !!_fuzzyFn(l.link) : terms.every(t => l.link.toLowerCase().includes(t))));
                         if (hit) {
-                            mdItems.push({ label: f.basename, sub: hit.link, twoLine: true, icon: this._fileIconName(f), action: () => this._openVaultResult(f.path, f.basename) });
+                            mdItems.push({ path:f.path,label: f.basename, sub: hit.link, twoLine: true, icon: this._fileIconName(f), action: () => this._openVaultResult(f.path, f.basename) });
                             if (mdItems.length >= 5) break;
                         }
                     }
@@ -176,10 +175,11 @@ async _searchVault(q) {
                         if (bm) {
                             const flat = this._flattenBookmarks(bm.items || []);
                             for (const item of flat) {
+                                if(item.path&&isExcluded(item.path))continue;
                                 const title = item.title || item.path || "";
                                 if (_fuzzyFn ? !!_fuzzyFn(title) : terms.every(t => title.toLowerCase().includes(t))) {
                                     bmItems.push({
-                                        label: title,
+                                        path:item.path,label: title,
                                         sub: item.path || "",
                                         twoLine: true,
                                         icon: this._bookmarkIconName(item),
@@ -213,8 +213,8 @@ async _searchVault(q) {
 
                 if (specialGroups.length > 0) {
                     if (this._isVaultStale(ver)) return;
-                    const sortEl2 = this._buildSortSelect(q);
-                    this._renderDropdown([{ title: "Vault 文件", items: nameItems, sortEl: sortEl2 }, ...specialGroups]);
+
+                    this._renderDropdown([{ title: "Vault 文件", items: nameItems }, ...specialGroups]);
                 }
 
                 if (!this._contentSearch) return;
@@ -243,7 +243,7 @@ async _searchVault(q) {
                             const textLow = text.toLowerCase();
                             if (terms.every(t => textLow.includes(t))) {
                                 return {
-                                    label: f.basename,
+                                    path:f.path,label: f.basename,
                                     sub: f.parent?.path || "/",
                                     terms,
                                     hits: this._extractAllSnippets(text, terms, ctxLen),
@@ -263,8 +263,7 @@ async _searchVault(q) {
                 }
                 if (this._isVaultStale(ver)) return;
 
-                const sortEl3 = this._buildSortSelect(q);
-                const allGroups = [{ title: "Vault 文件", items: nameItems, sortEl: sortEl3 }, ...specialGroups];
+                const allGroups = [{ title: "Vault 文件", items: nameItems }, ...specialGroups];
                 if (contentItems.length > 0) allGroups.push({ title: "内容匹配", items: contentItems });
                 this._renderDropdown(allGroups);
 

@@ -1,5 +1,4 @@
 import { validateSetting } from './schema.ts';
-import { COLLAPSIBLE_GROUPS, DEFAULT_EXPANDED_GROUPS } from '../shared/constants.ts';
 import type {SettingsPatch} from '../types.ts';
 
 export const MODEL_SPECS = {
@@ -24,11 +23,11 @@ export const MODEL_SPECS = {
     fields:[
       {key:'name',label:'名称',placeholder:'例如：工作笔记'},
       {key:'mode',label:'筛选方式',type:'select',options:{'白名单':'仅搜索所选路径','黑名单':'排除所选路径'}},
-      {key:'excludeFolders',label:'路径',type:'paths'},
+      {key:'excludeFolders',label:'过滤规则',type:'paths'},
       {key:'icon',label:'图标',type:'icon',placeholder:'例如：folder、book-open'}
     ]
   },
-  excludePaths:{singular:'路径',strings:true,placeholder:'例如：Projects/Archive（仓库内路径）',create:()=>''}
+  excludePaths:{singular:'路径',strings:true,placeholder:'例如：Projects/Archive、glob:**/assets/**、regex:/表达式/i',create:()=>''}
 };
 export const INDEX_FIELDS = [
   {key:'enabled',label:'启用搜索索引',description:'在后台建立索引，减少逐次扫描文件。',default:true},
@@ -37,8 +36,8 @@ export const INDEX_FIELDS = [
   {key:'debug',label:'索引调试日志',description:'排查索引问题时开启。',default:false}
 ];
 export function booleanFields(key,value) {
-  if(key==='searchIndex')return INDEX_FIELDS;
-  return [...new Set([...COLLAPSIBLE_GROUPS,...Object.keys(value)])].map(name=>({key:name,label:name,description:'开启后默认展开这个结果分组。',default:DEFAULT_EXPANDED_GROUPS.has(name)}));
+  if(key!=='searchIndex')throw new Error('未知开关模型：'+key);
+  return INDEX_FIELDS;
 }
 // Stable row identities preserve default selections through edits.
 // 稳定行标识保留重命名或删除前后的默认选择对应关系。

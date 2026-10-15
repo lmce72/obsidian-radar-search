@@ -1,6 +1,6 @@
 import * as Obsidian from 'obsidian';
 import { moment } from '../shared/moment.ts';
-import { SHEET_BREAKPOINT, MIN_PANEL_H, PILL_ICON_SIZE, COLLAPSIBLE_GROUPS, DEFAULT_EXPANDED_GROUPS, GROUP_ICON, EXT_ICON } from '../shared/constants.ts';
+import { SHEET_BREAKPOINT, MIN_PANEL_H, PILL_ICON_SIZE, EXT_ICON } from '../shared/constants.ts';
 import { IconRenderer } from '../shared/icons.ts';
 import { makeTouchHandler } from '../shared/touch.ts';
 
@@ -25,8 +25,6 @@ export const withLayout = Base => class extends Base {
   declare _barLeft;
   declare _clearHistoryBtn;
   declare _cornerBtnEl;
-  declare _toggleAllIconSpan;
-  declare _toggleAllBtn;
   declare _dropdownInner;
 
 _getSeasonRgb() {
@@ -512,6 +510,8 @@ _buildDropdown() {
                 display: "flex", alignItems: "center", gap: "4px", flexShrink: "0"
             });
 
+            this._buildResultTools(_dropCornerBtnRow);
+
             // 清除当前页历史按钮
             const _clearHistoryBtn = _dropCornerBtnRow.createEl("button");
             Object.assign(_clearHistoryBtn.style, {
@@ -552,25 +552,6 @@ _buildDropdown() {
             this._listen(_cornerBtnEl, "touchend", (e) => { e.stopPropagation(); cornerBtnHandler.onTouchEnd(e); });
             this._listen(_cornerBtnEl, "click", (e) => { e.stopPropagation(); this._openResultsPage(); });
             this._cornerBtnEl = _cornerBtnEl;
-
-            // 全部展开 / 收起（专项分组；图标与 tooltip 反映点击后的动作，由 _renderDropdown 刷新）
-            const _toggleAllBtn = _dropCornerBtnRow.createEl("button");
-            Object.assign(_toggleAllBtn.style, {
-                width: "24px", height: "24px", borderRadius: "6px", border: "none",
-                background: "transparent", cursor: "pointer", padding: "0",
-                display: "none", alignItems: "center", justifyContent: "center",
-                transition: "background 0.1s", color: "var(--text-muted)"
-            });
-            const _toggleAllIconSpan = _toggleAllBtn.createSpan();
-            Object.assign(_toggleAllIconSpan.style, { display: "inline-flex", alignItems: "center", pointerEvents: "none" });
-            this._toggleAllIconSpan = _toggleAllIconSpan;
-            this._listen(_toggleAllBtn, "mouseenter", () => { _toggleAllBtn.style.background = "var(--background-modifier-hover)"; });
-            this._listen(_toggleAllBtn, "mouseleave", () => { _toggleAllBtn.style.background = "transparent"; });
-            const toggleAllHandler = this._makeTouchHandler((e) => { e.stopPropagation(); this._toggleAllResultGroups(); });
-            this._listen(_toggleAllBtn, "touchstart", toggleAllHandler.onTouchStart, { passive: true });
-            this._listen(_toggleAllBtn, "touchend", (e) => { e.stopPropagation(); toggleAllHandler.onTouchEnd(e); });
-            this._listen(_toggleAllBtn, "click", (e) => { e.stopPropagation(); this._toggleAllResultGroups(); });
-            this._toggleAllBtn = _toggleAllBtn;
 
             // 内部可滚动容器
             this._dropdownInner = this._dropdown.createDiv({attr:{id:'primecore-results-'+crypto.randomUUID()}});

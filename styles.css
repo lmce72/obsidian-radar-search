@@ -127,3 +127,30 @@ button.primecore-settings-action:active {
 .primecore-search-page { display: flex; flex-direction: column; gap: 12px; }
 .primecore-search-page .primecore-results-inline { width: 100%; flex: 1 1 auto; }
 .primecore-open-results-page { white-space: nowrap; font-size: var(--font-ui-smaller); }
+.primecore-result-tab-count {
+  padding: 0 5px;
+  border-radius: var(--radius-s);
+  color: var(--text-muted);
+  background: var(--background-secondary);
+  font-size: var(--font-ui-smaller);
+  line-height: 1.5;
+}
+.primecore-result-tab[aria-selected="true"] .primecore-result-tab-count { color: var(--text-accent); }
+.primecore-result-source { padding: 8px 14px; color: var(--text-muted); font-size: var(--font-ui-small); }
+.primecore-result-sort { display: flex; align-items: center; }
+.primecore-result-tools { display: flex; align-items: center; gap: 4px; flex-shrink: 0; }
+.primecore-result-tools .primecore-settings-action { white-space: nowrap; font-size: var(--font-ui-smaller); }
+.primecore-result-tools .is-active { color: var(--text-accent); }
+.primecore-result-tool-view { padding: 8px 12px 12px; }
+.primecore-result-tool-view .setting-item { flex-wrap: wrap; gap: 8px; }
+.primecore-result-tool-view .setting-item-control { flex-wrap: wrap; }
+.primecore-result-tool-view input[type="text"] { min-width: 140px; max-width: 100%; }
+.primecore-sort-option { display: flex !important; width: 100%; justify-content: flex-start; }
+.primecore-sort-option[aria-pressed="true"] { color: var(--text-accent); }
+.primecore-directory-suggestions { z-index: 100000 !important; }
+.suggestion-container:has(.primecore-folder-suggestion) { z-index: 100000 !important; }
+.primecore-results { container-type: inline-size; }
+@container (max-width: 600px) {
+  .primecore-results-toolbar { flex-wrap: wrap !important; }
+  .primecore-results-toolbar > .primecore-result-tabs { flex-basis: 100% !important; }
+}

@@ -1,6 +1,7 @@
+import {isDirectorySuggestion} from './directory-suggest.ts';
 import * as Obsidian from 'obsidian';
 import { moment } from '../shared/moment.ts';
-import { SHEET_BREAKPOINT, MIN_PANEL_H, PILL_ICON_SIZE, COLLAPSIBLE_GROUPS, DEFAULT_EXPANDED_GROUPS, GROUP_ICON, EXT_ICON } from '../shared/constants.ts';
+import { SHEET_BREAKPOINT, MIN_PANEL_H, PILL_ICON_SIZE, EXT_ICON } from '../shared/constants.ts';
 import { IconRenderer } from '../shared/icons.ts';
 import { makeTouchHandler } from '../shared/touch.ts';
 
@@ -235,6 +236,7 @@ _bindEvents() {
 
             // 点击外部关闭浮层（dropdown / scopeMenu / vaultSearchPanel / 遮罩 都挂在 body，需特判）
             this._listen(document, "click", (e) => {
+                if(isDirectorySuggestion(e.target))return;
                 const inWrap  = this._wrap.contains(e.target);
                 const inDrop  = this._dropdown.contains(e.target);
                 const inMenu  = this._scopeMenu.contains(e.target);

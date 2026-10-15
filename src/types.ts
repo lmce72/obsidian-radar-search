@@ -12,13 +12,14 @@ export interface SearchSettings {
   vaultContentSearch:boolean;vaultContentSearchMaxResults:number;searchWikiLinks:boolean;searchMdLinks:boolean;
   searchBookmarks:boolean;searchTags:boolean;searchCommands:boolean;searchNonMarkdown:boolean;searchProperties:boolean;
   extendedContext:boolean;vaultSortMode:SortMode;limitContentResults:boolean;searchPresets:SearchPreset[];defaultPreset:string;
-  activeEngineId:string|null;webSources:WebSource[];engines:SearchEngine[];resultGroupState:Record<string,boolean>;
+  activeEngineId:string|null;webSources:WebSource[];engines:SearchEngine[];
   searchIndex:IndexSettings;debug:boolean;
 }
 export type SettingsPatch=Partial<SearchSettings>;
 export interface SearchHistoryRecord {q:string;mode:SearchMode;ts:number;file?:string;date?:string}
 export interface SearchItem {
   label:string;action:()=>void;icon?:string;path?:string;sub?:string;snippet?:string;
+  terms?:string[];hits?:ContentMatch[];onMatch?:(hit:ContentMatch)=>void;twoLine?:boolean;
   trailing?:{icon:string;title:string;onClick:()=>void};
 }
 export interface SearchGroup {title:string;items:SearchItem[]}
@@ -28,7 +29,8 @@ export interface PersistenceHost {
   report(level:'warn'|'error'|'log',...args:unknown[]):void;
 }
 
-export type ResultCategory = 'all'|'files'|'content'|'tags'|'links'|'bookmarks'|'properties'|'commands'|'web';
-export interface SearchSession { query:string; mode:SearchMode; category:ResultCategory; settings:SearchSettings }
+export type ResultCategory = 'files'|'content'|'tags'|'wikiLinks'|'mdLinks'|'bookmarks'|'properties'|'commands'|'hiddenCommands'|'web';
+export interface PathFilter {mode:SearchPreset['mode'];paths:string[]}
+export interface SearchSession { query:string; mode:SearchMode; category:ResultCategory; settings:SearchSettings; temporaryFilter?:PathFilter }
 export interface SearchMountOptions { presentation?:'floating'|'page'; session?:SearchSession }
 export interface ContentMatch { text:string; start:number; end:number; match:string; before:string; after:string }

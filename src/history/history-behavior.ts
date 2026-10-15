@@ -1,6 +1,6 @@
 import * as Obsidian from 'obsidian';
 import { moment } from '../shared/moment.ts';
-import { SHEET_BREAKPOINT, MIN_PANEL_H, PILL_ICON_SIZE, COLLAPSIBLE_GROUPS, DEFAULT_EXPANDED_GROUPS, GROUP_ICON, EXT_ICON } from '../shared/constants.ts';
+import { SHEET_BREAKPOINT, MIN_PANEL_H, PILL_ICON_SIZE, EXT_ICON } from '../shared/constants.ts';
 import { IconRenderer } from '../shared/icons.ts';
 import { makeTouchHandler } from '../shared/touch.ts';
 import {resolveContentMatch,offsetToPosition} from '../search/content-matches.ts';
@@ -258,7 +258,7 @@ _renderHistoryDropdown(date, records, page = 1) {
             }
             this._itemEls = [];
             // 历史视图没有专项分组：收起「全部展开/收起」按钮并清掉上次的分组引用
-            if (this._toggleAllBtn) this._toggleAllBtn.style.display = "none";
+            this._syncResultTools(true);
             this._lastGroups = null;
 
             const today      = moment().format("YYYY-MM-DD");

@@ -1,6 +1,6 @@
 import * as Obsidian from 'obsidian';
 import { moment } from '../shared/moment.ts';
-import { SHEET_BREAKPOINT, MIN_PANEL_H, PILL_ICON_SIZE, COLLAPSIBLE_GROUPS, DEFAULT_EXPANDED_GROUPS, GROUP_ICON, EXT_ICON } from '../shared/constants.ts';
+import { SHEET_BREAKPOINT, MIN_PANEL_H, PILL_ICON_SIZE, EXT_ICON } from '../shared/constants.ts';
 import { IconRenderer } from '../shared/icons.ts';
 import { makeTouchHandler } from '../shared/touch.ts';
 
@@ -51,7 +51,8 @@ _buildPropertyItems(q, terms, _fuzzyFn, limit = 8) {
                 const valQ = m ? m[2].trim().toLowerCase() : null;
                 const matches = (text) => _fuzzyFn ? !!_fuzzyFn(text) : terms.every(t => String(text).toLowerCase().includes(t));
 
-                for (const f of this.app.vault.getMarkdownFiles()) {
+                const isExcluded=this._excludedPredicate();
+                for (const f of this.app.vault.getMarkdownFiles().filter(f=>!isExcluded(f))) {
                     const fm = this.app.metadataCache.getFileCache(f)?.frontmatter;
                     if (!fm) continue;
                     let hitText = null;
@@ -75,7 +76,7 @@ _buildPropertyItems(q, terms, _fuzzyFn, limit = 8) {
                     }
                     if (!hitText) continue;
                     items.push({
-                        label: this._fileLabel(f),
+                        path:f.path,label: this._fileLabel(f),
                         sub: hitText,
                         terms,
                         twoLine: true,

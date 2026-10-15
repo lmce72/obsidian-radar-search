@@ -30,7 +30,7 @@ export class SettingsForm {
   openModel(key) {
     this.navigation.push({title:LABELS[key],render:(parent,view)=>{
       view.form=new SettingsForm(this.plugin,parent,this.navigation);
-      const Editor=key==='resultGroupState'?BooleanModelEditor:CollectionEditor;
+      const Editor=CollectionEditor;
       view.form.editors.set(key,new Editor(view.form,key,parent,view.toolbar));
     }});
   }
@@ -62,8 +62,8 @@ export class SettingsForm {
         }});
       }});return;
     }
-    if(['excludePaths','resultGroupState'].includes(key)) {
-      new ActionButton(row.controlEl,{icon:key==='excludePaths'?'folder-minus':'list-tree',label:'配置',onClick:()=>this.openModel(key)});return;
+    if(key==='excludePaths') {
+      new ActionButton(row.controlEl,{icon:'folder-minus',label:'配置',onClick:()=>this.openModel(key)});return;
     }
     const value=this.plugin.settings[key];
     if(typeof DEFAULT_SETTINGS[key]==='boolean') {row.addToggle(control=>control.setValue(value).onChange(next=>this.save(key,next)));return;}

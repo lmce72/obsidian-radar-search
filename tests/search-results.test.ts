@@ -38,38 +38,43 @@ test('literal queries escape regex syntax and ignore empty terms',()=>{
 test('result categories remain available with zero matches and honor enabled sources',()=>{
   const cfg={...structuredClone(DEFAULT_SETTINGS),vaultContentSearch:true,searchTags:false,searchProperties:false,searchWikiLinks:false,searchMdLinks:false};
   const ids=availableCategories(cfg,'vault','query').map(c=>c.id);
-  expect(ids).toContain('content');expect(ids).not.toContain('tags');expect(ids).not.toContain('links');expect(ids).not.toContain('web');
+  expect(ids).toContain('content');expect(ids).not.toContain('tags');expect(ids).not.toContain('wikiLinks');expect(ids).not.toContain('mdLinks');expect(ids).not.toContain('web');
   expect(availableCategories(cfg,'vault','#tag').map(c=>c.id)).toContain('tags');
   expect(availableCategories(cfg,'web','query')).toEqual([]);
   expect(filterResultGroups([{title:'Vault 文件'},{title:'内容匹配'}],'tags')).toEqual([]);
 });
 
-test('classification combines related groups without losing groups when switching tabs',()=>{
+test('each result group has its own tab, including hidden commands and link types',()=>{
   const groups=[{title:'Vault 文件'},{title:'内容匹配'},{title:'标签匹配'},{title:'命令匹配'},{title:'隐藏命令'},{title:'内链匹配'},{title:'外链匹配'},{title:'DuckDuckGo'}];
   expect(filterResultGroups(groups,'content')).toEqual([{title:'内容匹配'}]);
-  expect(filterResultGroups(groups,'commands')).toHaveLength(2);
-  expect(filterResultGroups(groups,'links')).toHaveLength(2);
+  expect(filterResultGroups(groups,'commands')).toEqual([{title:'命令匹配'}]);
+  expect(filterResultGroups(groups,'hiddenCommands')).toEqual([{title:'隐藏命令'}]);
+  expect(filterResultGroups(groups,'wikiLinks')).toEqual([{title:'内链匹配'}]);
+  expect(filterResultGroups(groups,'mdLinks')).toEqual([{title:'外链匹配'}]);
   expect(filterResultGroups(groups,'web')).toEqual([{title:'DuckDuckGo'}]);
-  expect(filterResultGroups(groups,'all')).toBe(groups);
+  expect(groups).toHaveLength(8);
 });
 
 test('page handoff carries local filters and clones settings without persisting them',async()=>{
   const {withResultPresentation}=await import('../src/ui/result-presentation.ts');
   const fixture=Object.assign(new (withResultPresentation(class {}))(),{
-    cfg:structuredClone(DEFAULT_SETTINGS),_mode:'vault',_resultCategory:'content',_input:{value:'query'},
+    _temporaryFilter:{mode:'黑名单',paths:['glob:**/assets/**']},cfg:structuredClone(DEFAULT_SETTINGS),_mode:'vault',_resultCategory:'content',_input:{value:'query'},
     _contentSearch:true,_searchTags:true,_searchWikiLinks:false,_searchMdLinks:false,_searchBookmarks:false,_searchProperties:true,
     _searchCommands:false,_searchNonMarkdown:false,_extendedContext:true,_selectedPreset:'preset',_limitContentResults:false,
     _vaultSortMode:'alpha-asc',_activeEngineId:null,_groupPages:new Map([['Vault 文件',2]]),_historyVer:0,_vaultSearchVer:0,_webSearchVer:0,
-    _syncClearBtn(){},_selectMode(mode:string){this._mode=mode;this._resultCategory='all';},_doSearch:async(q:string)=>{queried=q;}
+    _syncClearBtn(){},_selectMode(mode:string){this._mode=mode;this._resultCategory='files';},_doSearch:async(q:string)=>{queried=q;}
   });
   let queried='';
   const session=fixture.getSearchSession();
+  expect(session.temporaryFilter.paths).toEqual(['glob:**/assets/**']);
+  expect(session.temporaryFilter).not.toBe(fixture._temporaryFilter);
   expect(session.settings.searchProperties).toBe(true);
   expect(session.settings.defaultPreset).toBe('preset');
   expect(session.settings.vaultSortMode).toBe('alpha-asc');
   session.settings.excludePaths.push('private/');
   expect(fixture.cfg.excludePaths).not.toContain('private/');
   await fixture.applySearchSession(session);
+  expect(fixture._temporaryFilter).toEqual(session.temporaryFilter);
   expect(fixture._resultCategory).toBe('content');
   expect(fixture._groupPages.size).toBe(0);
   expect(queried).toBe('query');
