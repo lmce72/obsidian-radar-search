@@ -8,13 +8,19 @@ import { LABELS, DESCRIPTIONS, PLACEHOLDERS, VAULT_OPTION_KEYS } from './fields.
 export class SettingsForm {
   constructor(plugin,container) {
     this.plugin=plugin;this.app=plugin.app;this.containerEl=container;
-    this.choiceControls=new Map();this.editors=new Map();
+    this.choiceControls=new Map();this.editors=new Map();this.fieldRows=new Map();
   }
   async saveChanges(changes) {
-    try {await this.plugin.updateSettings(changes,true);return true;}
+    try {await this.plugin.updateSettings(changes,true);this.refreshVisibility();return true;}
     catch(error) {new Notice(`设置未保存：${error.message}`);return false;}
   }
   async save(key,value) {return this.saveChanges({[key]:value});}
+  refreshVisibility() {
+    const perMode=this.plugin.settings.placeholderType==='custom';
+    for(const key of ['placeholder_global','placeholder_vault','placeholder_web']) {
+      this.fieldRows.get(key)?.settingEl.toggle(perMode);
+    }
+  }
   refreshChoices() {
     for(const [key,control] of this.choiceControls) {
       control.selectEl.empty();control.addOption('',key==='defaultPreset'?'不使用预设':'所有已启用引擎');
@@ -25,6 +31,7 @@ export class SettingsForm {
   }
   addField(key) {
     const row=new Setting(this.containerEl).setName(LABELS[key]).setDesc(DESCRIPTIONS[key]||'');
+    this.fieldRows.set(key,row);this.refreshVisibility();
     if(key==='vaultOptions') {
       row.addButton(button=>button.setButtonText('配置搜索选项').onClick(()=>{
         const dialog=new SettingsDialog(this.plugin,{title:'Vault 搜索选项',render:parent=>{
