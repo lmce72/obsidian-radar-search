@@ -45,10 +45,10 @@ export const withResultPresentation=Base=>class extends Base {
     if(!this._resultCategoryChosen&&!counts.get(this._resultCategory))this._resultCategory=categories.find(c=>counts.get(c.id)>0)?.id||this._resultCategory;
     for(const category of categories) {
       const active=category.id===this._resultCategory;
-      const button=el.createEl('button',{cls:'primecore-result-tab',attr:{role:'tab','aria-selected':String(active),'data-category':category.id}});
+      const button=el.createEl('button',{cls:'primecore-result-tab',attr:{role:'tab','aria-selected':String(active),'data-category':category.id,'aria-label':`${category.label}，${counts.get(category.id)||0} 项结果`}});
       button.tabIndex=active?0:-1;
       button.setAttribute('aria-controls',this._dropdownInner.id);
-      this._setIcon(button.createSpan(),category.icon,14);button.createSpan({text:category.label});
+      this._setIcon(button.createSpan({cls:'primecore-result-tab-icon'}),category.icon,14);button.createSpan({cls:'primecore-result-tab-label',text:category.label});
       button.createSpan({cls:'primecore-result-tab-count',text:String(counts.get(category.id)||0)});
       this._listen(button,'mousedown',event=>event.preventDefault());
       const select=()=>{this._resultCategory=category.id;this._resultCategoryChosen=true;this._activeIdx=-1;this._renderDropdown(this._lastGroups||[]);};

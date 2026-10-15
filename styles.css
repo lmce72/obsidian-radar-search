@@ -154,3 +154,10 @@ button.primecore-settings-action:active {
   .primecore-results-toolbar { flex-wrap: wrap !important; }
   .primecore-results-toolbar > .primecore-result-tabs { flex-basis: 100% !important; }
 }
+.primecore-result-tabs .primecore-result-tab { gap: 0; }
+.primecore-result-tab-icon { display: inline-flex; align-items: center; flex-shrink: 0; }
+.primecore-result-tab-label,
+.primecore-result-tab .primecore-result-tab-count { display: none; }
+.primecore-result-tab:is(:hover, :focus-visible) { gap: 5px; }
+.primecore-result-tab:is(:hover, :focus-visible) .primecore-result-tab-label,
+.primecore-result-tab:is(:hover, :focus-visible) .primecore-result-tab-count { display: inline; }
