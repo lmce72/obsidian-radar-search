@@ -144,6 +144,7 @@ _toggleAllResultGroups() {
 _refreshToggleAllBtn() {
             try {
                 if (!this._toggleAllBtn || !this._toggleAllIconSpan) return;
+                if(this._resultCategory!=='all') {this._toggleAllBtn.style.display='none';return;}
                 const titles = this._collapsibleTitlesInResults();
                 if (titles.length === 0) { this._toggleAllBtn.style.display = "none"; return; }
                 const allExpanded = titles.every(t => this._isGroupExpanded(t));
@@ -159,20 +160,17 @@ _renderDropdown(groups) {
             this._dropdownInner.empty();
             this._itemEls = [];
 
-            const allItems = groups.flatMap(g => g.items);
-            if (allItems.length === 0) {
-                this._hideDropdown();
-                return;
-            }
-
-            // 超过 1 个分组时显示标题行
-            const showTitles = groups.length > 1 || (groups.length === 1 && groups[0].title);
-
-            // 记录本次分组，供展开/收起切换后原样重渲染
             this._lastGroups = groups;
-            // 顶栏切到「结果」上下文
-            this._prepBar("results");
-
+            this._activeIdx=-1;
+            this._prepBar('results');
+            const visibleGroups=this._visibleResultGroups(groups);
+            const allGroups=groups;
+            groups=visibleGroups;
+            const showTitles = groups.length > 1 || (groups.length === 1 && groups[0].title);
+            if(!groups.some(group=>group.items.length)) {
+                this._dropdownInner.createDiv({cls:'primecore-results-empty',text:'没有匹配的结果'});
+                this._refreshToggleAllBtn();this._showDropdown();return;
+            }
             for (let gi = 0; gi < groups.length; gi++) {
                 const group    = groups[gi];
                 const groupKey = group.title || String(gi);
@@ -184,8 +182,8 @@ _renderDropdown(groups) {
                 const slicedItems = group.items.slice((groupPage - 1) * pageSize, groupPage * pageSize);
 
                 // 可折叠分组：标题可点击折叠；收起时跳过条目与分页行
-                const collapsible = !!(group.title && COLLAPSIBLE_GROUPS.has(group.title));
-                const expanded    = !collapsible || this._isGroupExpanded(group.title);
+                const collapsible = this._resultCategory==='all' && !!(group.title && COLLAPSIBLE_GROUPS.has(group.title));
+                const expanded    = this._resultCategory!=='all' || !collapsible || this._isGroupExpanded(group.title);
 
                 if (showTitles && group.title) {
                     const titleEl = this._dropdownInner.createDiv();
@@ -307,12 +305,15 @@ _renderDropdown(groups) {
                             });
                             this._listen(snippetEl, "mouseenter", () => { snippetEl.style.background = "var(--background-modifier-hover)"; });
                             this._listen(snippetEl, "mouseleave", () => { snippetEl.style.background = "transparent"; });
-                            this._highlightText(snippetEl, snippet, item.terms);
+                            this._highlightText(snippetEl, snippet.text, item.terms);
+                            snippetEl.setAttribute("role","button");snippetEl.tabIndex=0;
+                            const openMatch=()=>{if(item.onMatch)item.onMatch(snippet);else item.action();this._hideDropdown();};
+                            this._listen(snippetEl,"keydown",e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();e.stopPropagation();openMatch();}});
                             this._listen(snippetEl, "mousedown", e => e.preventDefault());
-                            const snippetHandler = this._makeTouchHandler((e) => { e.stopPropagation(); item.action(); this._hideDropdown(); });
+                            const snippetHandler = this._makeTouchHandler((e) => { e.stopPropagation(); openMatch(); });
                             this._listen(snippetEl, "touchstart", snippetHandler.onTouchStart, { passive: true });
                             this._listen(snippetEl, "touchend", (e) => { e.stopPropagation(); snippetHandler.onTouchEnd(e); });
-                            this._listen(snippetEl, "click", e => { e.stopPropagation(); item.action(); this._hideDropdown(); });
+                            this._listen(snippetEl, "click", e => { e.stopPropagation(); openMatch(); });
                         }
                         let _expanded = false;
                         const _toggle = e => { e.stopPropagation(); _expanded = !_expanded; hitsContainer.style.display = _expanded ? "flex" : "none"; chevronEl.style.transform = _expanded ? "rotate(90deg)" : ""; };
@@ -370,25 +371,6 @@ _renderDropdown(groups) {
                         this._listen(itemEl, "touchstart", twoLineHandler.onTouchStart, { passive: true });
                         this._listen(itemEl, "touchend", twoLineHandler.onTouchEnd);
                         this._listen(itemEl, "click", () => { item.action(); this._hideDropdown(); });
-                    } else if (item.isNativeSearch) {
-                        // ── Obsidian 原生搜索兜底 ──────────────────────────────
-                        Object.assign(itemEl.style, {
-                            display: "flex", alignItems: "center", gap: "6px",
-                            padding: "6px 14px", minHeight: "32px",
-                            borderTop: "1px solid var(--background-modifier-border)"
-                        });
-                        const iconSpan = itemEl.createSpan();
-                        Object.assign(iconSpan.style, { display: "inline-flex", alignItems: "center", flexShrink: "0", color: "var(--text-muted)" });
-                        this._setIcon(iconSpan, "search", 13);
-                        const lbl = itemEl.createSpan({ text: item.label });
-                        Object.assign(lbl.style, { fontSize: "12px", color: "var(--text-muted)", fontStyle: "italic" });
-                        this._listen(itemEl, "mouseenter", () => { itemEl.style.background = "var(--background-modifier-hover)"; });
-                        this._listen(itemEl, "mouseleave", () => { itemEl.style.background = "transparent"; });
-                        this._listen(itemEl, "mousedown", e => e.preventDefault());
-                        const nativeSearchHandler = this._makeTouchHandler(() => { item.action(); this._hideDropdown(); });
-                        this._listen(itemEl, "touchstart", nativeSearchHandler.onTouchStart, { passive: true });
-                        this._listen(itemEl, "touchend", nativeSearchHandler.onTouchEnd);
-                        this._listen(itemEl, "click", () => { item.action(); this._hideDropdown(); });
                     } else {
                         // ── 普通 item ──────────────────────────────────────────
                         Object.assign(itemEl.style, {
@@ -430,7 +412,7 @@ _renderDropdown(groups) {
                 // 注意：多个分组各有分页栏时不能都 sticky，否则会在同一滚动容器底部互相叠压，
                 // 故分组内联展示（样式与历史分页栏一致），仅历史视图用 sticky。
                 if (totalGroupPages > 1) {
-                    const _goGroupPage = (newPage) => { this._groupPages.set(groupKey, newPage); this._renderDropdown(groups); };
+                    const _goGroupPage = (newPage) => { this._groupPages.set(groupKey, newPage); this._renderDropdown(allGroups); };
                     this._mkPagerBar(this._dropdownInner, {
                         page: groupPage,
                         totalPages: totalGroupPages,
@@ -466,6 +448,8 @@ _clearActiveAll() {
         }
 
 _handleKey(e) {
+            if(e.isComposing || e.keyCode===229)return;
+            if(this.presentation==='page'&&e.key==='Enter') {e.preventDefault();this._executeSearch();return;}
             if (this._dropdown.style.display === "none") {
                 if (e.key === "Enter") { e.preventDefault(); this._executeSearch(); }
                 return;

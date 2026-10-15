@@ -14,32 +14,25 @@ export const withEvents = Base => class extends Base {
   declare _engineRetained;
   declare _cleanup;
 
+_clearSearchInput() {
+            this._input.value='';
+            this._onInput('');
+            clearTimeout(this._debounceTimer);this._debounceTimer=null;
+            this._syncClearBtn();this._hideDropdown();
+            this._showHistory(moment().format('YYYY-MM-DD'));
+            this._focusInput();
+        }
+
 _executeSearch() {
             const q = this._input.value.trim();
             if (!q) return;
-            this._hideDropdown();
-
-            if (this._mode === "vault" || this._mode === "global") {
-                // 调用 Obsidian 内置全局搜索命令
-                try {
-                    this.app.commands.executeCommandById("global-search:open");
-                    // 延迟填入关键词（等搜索面板打开）
-                    this._later(() => {
-                        try {
-                            const searchLeaf = this.app.workspace.getLeavesOfType("search")[0];
-                            if (searchLeaf) {
-                                const view = searchLeaf.view;
-                                if (view && view.searchComponent) {
-                                    view.searchComponent.setValue(q);
-                                    view.searchComponent.onChanged();
-                                }
-                            }
-                        } catch (_) {}
-                    }, 200);
-                } catch (e) {
-                    this._log("error", "[SearchBar] 全局搜索命令执行失败:", e);
-                }
+            clearTimeout(this._debounceTimer);this._debounceTimer=null;
+            if (this._mode !== 'web') {
+                ++this._historyVer;
+                this._groupPages.clear();
+                this._doSearch(q);
             } else {
+                this._hideDropdown();
                 // web 模式：使用选中引擎（或第一个启用引擎）直接搜索
                 const _allEnabledExec = (this.cfg.engines || []).filter(e => e.enabled);
                 const eng = this._activeEngineId
@@ -48,8 +41,8 @@ _executeSearch() {
                 if (eng) this._openUrl(eng.url.replace("{q}", encodeURIComponent(q)));
             }
 
-            // 记录历史：按真实类型存，全局模式下回车走的是 Obsidian 原生全库搜索 → vault 类型
-            this._saveToHistory(q, this._mode === "web" ? "web" : "vault");
+            // Explicit submissions retain their actual mode; live searches do not write history.
+            this._saveToHistory(q, this._mode);
         }
 
 _themeUpdate() {
@@ -85,7 +78,7 @@ _bindEvents() {
 
             // 输入事件（keyup 作 input 备份，应对部分 Android IME 不触发 input 的情况）
             this._listen(this._input, "input",  () => { this._onInput(this._input.value); this._syncClearBtn(); });
-            this._listen(this._input, "keyup",  () => { this._onInput(this._input.value); this._syncClearBtn(); });
+            this._listen(this._input, "keyup", event => { if(event.key.length===1||event.key==='Backspace'||event.key==='Delete') {if(this._input.value!==this._lastInputValue)this._onInput(this._input.value);this._syncClearBtn();} });
             this._listen(this._input, "keydown", (e) => this._handleKey(e));
 
             // 清除按钮事件
@@ -93,16 +86,11 @@ _bindEvents() {
                 this._listen(this._clearBtn, "mousedown",  (e) => e.preventDefault());
                 const clearHandler = this._makeTouchHandler((e) => {
                     e.preventDefault();
-                    this._input.value = "";
-                    this._syncClearBtn();
-                    this._hideDropdown();
-                    this._showHistory(moment().format("YYYY-MM-DD"));
-                    // 触摸设备上不重新聚焦：清空后弹输入法会盖住刚展开的历史列表
-                    this._focusInput();
+                    this._clearSearchInput();
                 });
                 this._listen(this._clearBtn, "touchstart", clearHandler.onTouchStart, { passive: true });
                 this._listen(this._clearBtn, "touchend", clearHandler.onTouchEnd);
-                this._listen(this._clearBtn, "click", () => { this._input.value = ""; this._syncClearBtn(); this._hideDropdown(); this._showHistory(moment().format("YYYY-MM-DD")); this._focusInput(); });
+                this._listen(this._clearBtn, "click", () => this._clearSearchInput());
                 this._listen(this._clearBtn, "mouseenter", () => this._setSearchButtonBackground(this._clearBtn, true));
                 this._listen(this._clearBtn, "mouseleave", () => this._setSearchButtonBackground(this._clearBtn));
             }
@@ -111,7 +99,7 @@ _bindEvents() {
             this._listen(this._input, "focus", () => {
                 const q = this._input.value.trim();
                 if (q) {
-                    this._doSearch(q);
+                    if(this._lastQuery!==q || this._resultKind!=='results' || this._dropdown.style.display==='none')this._doSearch(q);
                 } else {
                     this._showHistory(moment().format("YYYY-MM-DD"));
                 }
@@ -318,6 +306,7 @@ async render() {
             try {
                 const rgb = this._getSeasonRgb();
                 this._buildShell(rgb);
+                this._syncSearchAction();
                 this._buildDropdown();
                 this._buildScopeMenu();
                 this._buildVaultSearchPanel(rgb);

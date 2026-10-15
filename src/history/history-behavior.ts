@@ -3,6 +3,8 @@ import { moment } from '../shared/moment.ts';
 import { SHEET_BREAKPOINT, MIN_PANEL_H, PILL_ICON_SIZE, COLLAPSIBLE_GROUPS, DEFAULT_EXPANDED_GROUPS, GROUP_ICON, EXT_ICON } from '../shared/constants.ts';
 import { IconRenderer } from '../shared/icons.ts';
 import { makeTouchHandler } from '../shared/touch.ts';
+import {resolveContentMatch,offsetToPosition} from '../search/content-matches.ts';
+import type {ContentMatch} from '../types.ts';
 
 // One cohesive behavior; shared state belongs to SearchBarComponent.
 export const withHistory = Base => class extends Base {
@@ -45,6 +47,9 @@ _openUrl(url) {
         }
 
 _onInput(value) {
+            this._lastInputValue=value;
+            ++this._historyVer;++this._vaultSearchVer;++this._webSearchVer;
+            this._activeIdx=-1;
             clearTimeout(this._debounceTimer);
             const q = value.trim();
             if (!q) {
@@ -61,6 +66,9 @@ _onInput(value) {
         }
 
 _doSearch(q) {
+            ++this._historyVer;
+            this._lastQuery=q;
+            this._lastInputValue=this._input.value;
             if (this._mode === "vault")  return this._searchVault(q);
             if (this._mode === "web")    return this._searchWeb(q);
             return this._searchGlobal(q);
@@ -117,7 +125,29 @@ _openVaultResult(path, label) {
             } catch (e) {
                 this._log("error", "[SearchBar] 结果点击记录失败:", e);
             }
-            this.app.workspace.openLinkText(path, "", false);
+            this.plugin.floatingSearch?.close();
+            this.app.workspace.openLinkText(path, "", this.presentation==='page').catch(error=>this._log('error','打开搜索结果失败',error));
+        }
+
+async _openContentResult(path:string,label:string,hit:ContentMatch) {
+            try {
+                const file=this.app.vault.getAbstractFileByPath(path);
+                if(!(file instanceof Obsidian.TFile))return;
+                const q=this._input.value.trim();
+                if(q)this._saveToHistory(q,'vault',label);
+                const leaf=this.app.workspace.getLeaf(this.presentation==='page'?'tab':false);
+                this.plugin.floatingSearch?.close();
+                await leaf.openFile(file,{state:{mode:'source'}});
+                if(!(leaf.view instanceof Obsidian.MarkdownView))return;
+                const editor=leaf.view.editor;
+                const text=editor.getValue();
+                const range=resolveContentMatch(text,hit);
+                if(!range) {new Obsidian.Notice('匹配内容已更改，请重新搜索');return;}
+                const from=offsetToPosition(text,range.start),to=offsetToPosition(text,range.end);
+                editor.setSelection(from,to);
+                editor.scrollIntoView({from,to},true);
+                editor.focus();
+            } catch(error) {this._log('error','定位匹配内容失败',error);}
         }
 
 async _showHistory(date) {

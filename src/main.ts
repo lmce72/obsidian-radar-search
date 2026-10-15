@@ -6,7 +6,7 @@ import { SettingsStore } from './settings/store.ts';
 import { SearchSettingTab } from './settings/tab.ts';
 import { HistoryStore } from './history/store.ts';
 import { PLUGIN_ICON_ID, registerPluginIcon } from './shared/plugin-icon.ts';
-import type {SearchSettings,SettingsPatch} from './types.ts';
+import type {SearchSettings,SettingsPatch,SearchMountOptions,SearchSession} from './types.ts';
 
 const VIEW_TYPE='primecore-search';
 class SearchView extends ItemView {
@@ -16,7 +16,7 @@ class SearchView extends ItemView {
   getViewType() {return VIEW_TYPE;}
   getDisplayText() {return 'Radar Search';}
   getIcon() {return PLUGIN_ICON_ID;}
-  async onOpen() {this.contentEl.empty();await this.plugin.mount(this.contentEl,this);}
+  async onOpen() {this.contentEl.empty();await this.plugin.mount(this.contentEl,this,{presentation:'page'});}
   async onClose() {this.plugin.unmount(this.contentEl);}
 }
 
@@ -62,14 +62,15 @@ export default class RadarSearchPlugin extends Plugin {
     await this.store.updateMany(changes);
     if(refresh)await this.refreshComponents();
   }
-  async mount(container:HTMLElement,owner:Component) {
+  async mount(container:HTMLElement,owner:Component,options:SearchMountOptions={}) {
     this.unmount(container);
-    const component=new SearchBarComponent(this,container);
+    const component=new SearchBarComponent(this,container,options);
     const record={component,owner};
     this.components.set(container,record);
     component.register(()=>{if(this.components.get(container)===record)this.components.delete(container);});
     owner.addChild(component);
     await component.render();
+    if(options.session)await component.applySearchSession(options.session);
     return component;
   }
   unmount(container:HTMLElement) {
@@ -84,21 +85,26 @@ export default class RadarSearchPlugin extends Plugin {
   }
   async rebuildMountedComponents() {
     if(this._stopping)return;
-    const mounted=[...this.components.entries()];
-    mounted.forEach(([container])=>this.unmount(container));
+    const mounted=[...this.components.entries()].map(([container,record])=>({container,...record,session:{...record.component.getSearchSession(),settings:structuredClone(this.settings)},presentation:record.component.presentation}));
+    mounted.forEach(({container})=>this.unmount(container));
     this.indexEngine.dispose();
-    for (const [container,{owner}] of mounted) if(!this._stopping && container.isConnected) await this.mount(container,owner);
+    for (const {container,owner,session,presentation} of mounted) if(!this._stopping && container.isConnected) await this.mount(container,owner,{presentation,session});
   }
   openFloatingSearch() {
     if(this.floatingSearch) {this.components.get(this.floatingSearch.contentEl)?.component._focusInput();return;}
     this.floatingSearch=new FloatingSearch(this);
     this.floatingSearch.open();
   }
-  async openSearchPage() {
+  async openSearchPage(session?:SearchSession) {
     let leaf=this.app.workspace.getLeavesOfType(VIEW_TYPE)[0];
     if (!leaf) {leaf=this.app.workspace.getLeaf('tab');await leaf.setViewState({type:VIEW_TYPE,active:true});}
     await this.app.workspace.revealLeaf(leaf);
-    if(leaf.view instanceof SearchView)this.components.get(leaf.view.contentEl)?.component._focusInput();
+    if(leaf.view instanceof SearchView) {
+      const component=this.components.get(leaf.view.contentEl)?.component;
+      if(session&&component)await component.applySearchSession(session);
+      component?._focusInput();
+    }
+    if(session)this.floatingSearch?.close();
   }
   onunload() {
     this._stopping=true;

@@ -1,3 +1,4 @@
+import {extractContentMatches} from './content-matches.ts';
 import * as Obsidian from 'obsidian';
 import { moment } from '../shared/moment.ts';
 import { SHEET_BREAKPOINT, MIN_PANEL_H, PILL_ICON_SIZE, COLLAPSIBLE_GROUPS, DEFAULT_EXPANDED_GROUPS, GROUP_ICON, EXT_ICON } from '../shared/constants.ts';
@@ -7,24 +8,7 @@ import { makeTouchHandler } from '../shared/touch.ts';
 // One cohesive behavior; shared state belongs to SearchBarComponent.
 export const withSnippets = Base => class extends Base {
 _extractAllSnippets(content, terms, ctxLen = 35) {
-            const normalized = content.replace(/\s+/g, " ");
-            const lower      = normalized.toLowerCase();
-            const snippets   = [];
-            const seen       = new Set();
-            for (const term of terms) {
-                let idx = 0;
-                while ((idx = lower.indexOf(term, idx)) !== -1) {
-                    const start  = Math.max(0, idx - ctxLen);
-                    const end    = Math.min(normalized.length, idx + term.length + ctxLen);
-                    const bucket = Math.floor(start / (ctxLen * 2));
-                    if (!seen.has(bucket)) {
-                        seen.add(bucket);
-                        snippets.push((start > 0 ? "…" : "") + normalized.slice(start, end) + (end < normalized.length ? "…" : ""));
-                    }
-                    idx += term.length;
-                }
-            }
-            return snippets.length > 0 ? snippets : [normalized.slice(0, ctxLen * 2)];
+            return extractContentMatches(content,terms,ctxLen);
         }
 
 _highlightText(container, text, terms) {

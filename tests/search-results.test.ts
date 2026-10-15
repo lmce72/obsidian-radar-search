@@ -1,0 +1,77 @@
+import {test,expect} from 'bun:test';
+import {extractContentMatches,resolveContentMatch,offsetToPosition} from '../src/search/content-matches.ts';
+import {availableCategories,filterResultGroups} from '../src/search/result-categories.ts';
+import {DEFAULT_SETTINGS} from '../src/settings/schema.ts';
+
+test('snippets retain raw source offsets across whitespace, Unicode and CRLF',()=>{
+  const text='İ title\r\n\r\n    中文目标   first\r\n'+ '说明 '.repeat(40)+'\r\n第二处 中文目标 end';
+  const hits=extractContentMatches(text,['中文目标'],16);
+  expect(hits).toHaveLength(2);
+  for(const hit of hits)expect(text.slice(hit.start,hit.end)).toBe('中文目标');
+  expect(hits[0].text).not.toContain('\r');
+  expect(offsetToPosition(text,hits[0].start)).toEqual({line:2,ch:4});
+  const editorText=text.replaceAll('\r\n','\n');
+  const range=resolveContentMatch(editorText,hits[1]);
+  expect(range.start).toBe(editorText.lastIndexOf('中文目标'));
+  expect(offsetToPosition(editorText,range.start)).toEqual({line:4,ch:4});
+});
+
+test('clicked occurrence is relocated after edits rather than jumping to the first repeated word',()=>{
+  const text='first needle alpha\n'+'filler '.repeat(30)+'\nsecond needle beta';
+  const hit=extractContentMatches(text,['needle'],10)[1];
+  const edited='new paragraph\n'.repeat(10)+text;
+  const range=resolveContentMatch(edited,hit);
+  expect(range.start).toBe(edited.lastIndexOf('needle'));
+  expect(edited.slice(range.start,range.end)).toBe('needle');
+  expect(resolveContentMatch(edited.replaceAll('needle','removed'),hit)).toBeNull();
+});
+
+test('literal queries escape regex syntax and ignore empty terms',()=>{
+  const text='Before a+b (test) [value] $after';
+  for(const term of ['a+b','(test)','[value]','$after']) {
+    const [hit]=extractContentMatches(text,[term],2);
+    expect(text.slice(hit.start,hit.end)).toBe(term);
+  }
+  expect(extractContentMatches(text,[''])).toEqual([]);
+});
+
+test('result categories remain available with zero matches and honor enabled sources',()=>{
+  const cfg={...structuredClone(DEFAULT_SETTINGS),vaultContentSearch:true,searchTags:false,searchProperties:false,searchWikiLinks:false,searchMdLinks:false};
+  const ids=availableCategories(cfg,'vault','query').map(c=>c.id);
+  expect(ids).toContain('content');expect(ids).not.toContain('tags');expect(ids).not.toContain('links');expect(ids).not.toContain('web');
+  expect(availableCategories(cfg,'vault','#tag').map(c=>c.id)).toContain('tags');
+  expect(availableCategories(cfg,'web','query')).toEqual([]);
+  expect(filterResultGroups([{title:'Vault 文件'},{title:'内容匹配'}],'tags')).toEqual([]);
+});
+
+test('classification combines related groups without losing groups when switching tabs',()=>{
+  const groups=[{title:'Vault 文件'},{title:'内容匹配'},{title:'标签匹配'},{title:'命令匹配'},{title:'隐藏命令'},{title:'内链匹配'},{title:'外链匹配'},{title:'DuckDuckGo'}];
+  expect(filterResultGroups(groups,'content')).toEqual([{title:'内容匹配'}]);
+  expect(filterResultGroups(groups,'commands')).toHaveLength(2);
+  expect(filterResultGroups(groups,'links')).toHaveLength(2);
+  expect(filterResultGroups(groups,'web')).toEqual([{title:'DuckDuckGo'}]);
+  expect(filterResultGroups(groups,'all')).toBe(groups);
+});
+
+test('page handoff carries local filters and clones settings without persisting them',async()=>{
+  const {withResultPresentation}=await import('../src/ui/result-presentation.ts');
+  const fixture=Object.assign(new (withResultPresentation(class {}))(),{
+    cfg:structuredClone(DEFAULT_SETTINGS),_mode:'vault',_resultCategory:'content',_input:{value:'query'},
+    _contentSearch:true,_searchTags:true,_searchWikiLinks:false,_searchMdLinks:false,_searchBookmarks:false,_searchProperties:true,
+    _searchCommands:false,_searchNonMarkdown:false,_extendedContext:true,_selectedPreset:'preset',_limitContentResults:false,
+    _vaultSortMode:'alpha-asc',_activeEngineId:null,_groupPages:new Map([['Vault 文件',2]]),_historyVer:0,_vaultSearchVer:0,_webSearchVer:0,
+    _syncClearBtn(){},_selectMode(mode:string){this._mode=mode;this._resultCategory='all';},_doSearch:async(q:string)=>{queried=q;}
+  });
+  let queried='';
+  const session=fixture.getSearchSession();
+  expect(session.settings.searchProperties).toBe(true);
+  expect(session.settings.defaultPreset).toBe('preset');
+  expect(session.settings.vaultSortMode).toBe('alpha-asc');
+  session.settings.excludePaths.push('private/');
+  expect(fixture.cfg.excludePaths).not.toContain('private/');
+  await fixture.applySearchSession(session);
+  expect(fixture._resultCategory).toBe('content');
+  expect(fixture._groupPages.size).toBe(0);
+  expect(queried).toBe('query');
+  expect(fixture.cfg).not.toBe(session.settings);
+});

@@ -13,12 +13,8 @@ async _searchGlobal(q) {
             const webSlots  = [];
             const _renderMerged = () => {
                 if (this._isVaultStale(ver)) return;
-                // 「在 Obsidian 中搜索」始终排在合并列表末尾（它是全库搜索入口，不属于任何一类结果）
-                const nativeGroup = {
-                    items: [{ label: `在 Obsidian 中搜索「${q}」`, isNativeSearch: true, action: () => this._executeSearch() }]
-                };
-                const groups = [...(vaultGroups || []), ...webSlots.filter(Boolean), nativeGroup];
-                if (groups.some(g => g.items && g.items.length > 0)) this._renderDropdown(groups);
+                const groups = [...(vaultGroups || []), ...webSlots.filter(Boolean)];
+                this._renderDropdown(groups);
             };
             try {
                 // 先发起 web 请求：全局 = vault 内外结合体，Vault 侧结果稍后到达时再合并渲染
@@ -88,50 +84,23 @@ async _searchGlobal(q) {
                         const tagTerms = tagQuery.toLowerCase().split(/\s+/).filter(Boolean);
 
                         const allFiles = this.app.vault.getMarkdownFiles();
-                        const fileSet  = new Set(files.map(f => f.path));
                         for (const f of allFiles) {
-                            if (fileSet.has(f.path)) continue;
                             const cache = this.app.metadataCache.getFileCache(f);
 
-                            // 扩展匹配范围：标签 + frontmatter 所有字段
+                            // Tags are independent of filename and property matches.
                             const tags  = [
                                 ...(Array.isArray(cache?.frontmatter?.tags) ? cache.frontmatter.tags : cache?.frontmatter?.tags ? [cache.frontmatter.tags] : []),
                                 ...(Array.isArray(cache?.frontmatter?.tag)  ? cache.frontmatter.tag  : cache?.frontmatter?.tag  ? [cache.frontmatter.tag]  : []),
                                 ...(cache?.tags?.map(t => t.tag) || [])
                             ];
 
-                            // frontmatter 所有字段值（扁平化处理）
-                            const frontmatterValues = [];
-                            if (cache?.frontmatter) {
-                                for (const [key, value] of Object.entries(cache.frontmatter)) {
-                                    if (key === 'tags' || key === 'tag') continue; // 已在 tags 数组中
-                                    if (value !== null && value !== undefined) {
-                                        if (Array.isArray(value)) {
-                                            frontmatterValues.push(...value.map(v => String(v)));
-                                        } else if (typeof value === 'object') {
-                                            frontmatterValues.push(JSON.stringify(value));
-                                        } else {
-                                            frontmatterValues.push(String(value));
-                                        }
-                                    }
-                                }
-                            }
-
                             // 标签匹配逻辑
                             const hasTagMatch = tags.some(t => {
                                 const tagStr = String(t).toLowerCase().replace(/^#/, "");
-                                if (_fuzzyFn) return !!_fuzzyFn(tagStr);
                                 return tagTerms.every(term => tagStr.includes(term));
                             });
 
-                            // frontmatter 字段匹配
-                            const hasFrontmatterMatch = frontmatterValues.some(v => {
-                                const valStr = String(v).toLowerCase();
-                                if (_fuzzyFn) return !!_fuzzyFn(valStr);
-                                return tagTerms.every(term => valStr.includes(term));
-                            });
-
-                            if (hasTagMatch || hasFrontmatterMatch) {
+                            if (hasTagMatch) {
                                 tagMatches.push(f);
                                 if (tagMatches.length >= 8) break;
                             }
@@ -141,8 +110,6 @@ async _searchGlobal(q) {
                     }
                 }
 
-                const combined    = engRows ? nameRows : [...files, ...tagMatches].slice(0, 20);
-                const combinedSet = new Set(combined.map(x => x.path));
 
                 // 将标签匹配单独分组（仅在专项搜索开启或 #tag 格式时）
                 const nameItems = engRows ? this._itemsFromEngineHits(nameRows, terms) : files.map(f => ({
@@ -179,7 +146,6 @@ async _searchGlobal(q) {
                 if (this._searchWikiLinks) {
                     const wikiItems = [];
                     for (const f of this.app.vault.getMarkdownFiles()) {
-                        if (combinedSet.has(f.path)) continue;
                         const links = this.app.metadataCache.getFileCache(f)?.links || [];
                         const hit   = links.find(l => _fuzzyFn ? !!_fuzzyFn(l.link) : terms.every(t => l.link.toLowerCase().includes(t)));
                         if (hit) {
@@ -193,7 +159,7 @@ async _searchGlobal(q) {
                 if (this._searchMdLinks) {
                     const mdItems = [];
                     for (const f of this.app.vault.getMarkdownFiles()) {
-                        if (combinedSet.has(f.path)) continue;
+
                         const links = this.app.metadataCache.getFileCache(f)?.links || [];
                         const hit   = links.find(l => /^https?:\/\//.test(l.original || "") && (_fuzzyFn ? !!_fuzzyFn(l.link) : terms.every(t => l.link.toLowerCase().includes(t))));
                         if (hit) {
@@ -262,8 +228,7 @@ async _searchGlobal(q) {
                     const cap = maxResults !== undefined ? maxResults : 60;
                     contentItems = await this._contentItemsFromEngine(contentRows.slice(0, cap), terms, ctxLen, ver);
                 } else {
-                    const candidates = this.app.vault.getMarkdownFiles()
-                        .filter(f => !combinedSet.has(f.path));
+                    const candidates = this.app.vault.getMarkdownFiles();
 
                     const reads = candidates.map(async (f) => {
                         try {
@@ -276,6 +241,7 @@ async _searchGlobal(q) {
                                     sub: f.parent?.path || "/",
                                     terms,
                                     hits: this._extractAllSnippets(text, terms, ctxLen),
+                                    onMatch: hit => this._openContentResult(f.path, f.basename, hit),
                                     icon: this._fileIconName(f),
                                     action: () => this._openVaultResult(f.path, f.basename)
                                 };

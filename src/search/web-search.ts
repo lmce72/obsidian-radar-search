@@ -85,7 +85,7 @@ async _searchWeb(q) {
             const ver = ++this._webSearchVer;
 
             const engines = this._resolveWebEngines();
-            if (engines.length === 0) { this._hideDropdown(); return; }
+            if (engines.length === 0) { this._renderDropdown([]); return; }
 
             this._buildWebGroups(
                 q,

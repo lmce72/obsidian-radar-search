@@ -76,11 +76,14 @@ async _contentItemsFromEngine(rows, terms, ctxLen, ver) {
                 if (!f) continue;
                 try {
                     const text = await this.app.vault.cachedRead(f);
+                    const hits=this._extractAllSnippets(text,terms,ctxLen);
+                    if(!hits.length)continue;
                     out.push({
                         label: this._fileLabel(f),
                         sub: f.parent?.path || "/",
                         terms,
-                        hits: this._extractAllSnippets(text, terms, ctxLen),
+                        hits,
+                                    onMatch: hit => this._openContentResult(f.path, f.basename, hit),
                         icon: this._fileIconName(f),
                         action: () => this._openVaultResult(f.path, this._fileLabel(f))
                     });

@@ -1,6 +1,6 @@
 import { Component } from 'obsidian';
 import type RadarSearchPlugin from '../main.ts';
-import type {SearchSettings,SearchMode} from '../types.ts';
+import type {SearchSettings,SearchMode,SearchMountOptions,SearchSession,ResultCategory} from '../types.ts';
 import { withLayout } from '../ui/layout.ts';
 import { withPanel } from '../ui/options-panel.ts';
 import { withWebOptions } from '../ui/web-options.ts';
@@ -15,9 +15,13 @@ import { withInteractions } from '../ui/interactions.ts';
 import { withMetadataSearch } from '../search/metadata-search.ts';
 import { withHistory } from '../history/history-behavior.ts';
 import { withEvents } from '../ui/events.ts';
-type SearchBarBehavior = Component & {render():Promise<void>;_focusInput():void;_teardownIndexFlush():void};
-const Behavior = [withLayout, withPanel, withWebOptions, withNavigation, withResults, withSnippets, withIndexIntegration, withVaultSearch, withGlobalSearch, withWebSearch, withInteractions, withMetadataSearch, withHistory, withEvents].reduce<unknown>((Base, mixin) => mixin(Base), Component) as new () => SearchBarBehavior;
+import {withResultPresentation} from './result-presentation.ts';
+type SearchBarBehavior = Component & {render():Promise<void>;_focusInput():void;_teardownIndexFlush():void;getSearchSession():SearchSession;applySearchSession(session:SearchSession):Promise<void>};
+const Behavior = [withResultPresentation, withLayout, withPanel, withWebOptions, withNavigation, withResults, withSnippets, withIndexIntegration, withVaultSearch, withGlobalSearch, withWebSearch, withInteractions, withMetadataSearch, withHistory, withEvents].reduce<unknown>((Base, mixin) => mixin(Base), Component) as new () => SearchBarBehavior;
 export class SearchBarComponent extends Behavior {
+  declare presentation:'floating'|'page';
+  declare _resultCategory:ResultCategory;
+  declare _resultKind:'results'|'history';
   declare _webSearchVer:number;
   declare _sourceEditor:HTMLElement;
   declare plugin:RadarSearchPlugin;
@@ -83,11 +87,13 @@ export class SearchBarComponent extends Behavior {
   declare _engineChipEls;
   declare _engineRowEl;
 
-constructor(plugin:RadarSearchPlugin, container:HTMLElement) {
+constructor(plugin:RadarSearchPlugin, container:HTMLElement, options:SearchMountOptions={}) {
             super();
             const appInst = plugin.app;
             const cfg = structuredClone(plugin.settings);
             this.plugin = plugin;
+            this.presentation=options.presentation||'floating';
+            this._resultCategory='all';
             this._disposed = false;
             this._timers = new Set();
             this._frames = new Set();
@@ -104,6 +110,7 @@ constructor(plugin:RadarSearchPlugin, container:HTMLElement) {
             this._itemEls = [];
             // web 搜索 AbortController 列表（每次输入前 abort 上一批）
             this._abortCtrls = [];
+            this._webSearchVer=0;
             // 防抖计时器
             this._debounceTimer = null;
             // 历史下拉版本计数器（取消竞态：focus 触发的 _showHistory 被输入打断时丢弃结果）

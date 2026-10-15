@@ -27,3 +27,8 @@ export interface PersistenceHost {
   saveData(settings:SearchSettings):Promise<unknown>;
   report(level:'warn'|'error'|'log',...args:unknown[]):void;
 }
+
+export type ResultCategory = 'all'|'files'|'content'|'tags'|'links'|'bookmarks'|'properties'|'commands'|'web';
+export interface SearchSession { query:string; mode:SearchMode; category:ResultCategory; settings:SearchSettings }
+export interface SearchMountOptions { presentation?:'floating'|'page'; session?:SearchSession }
+export interface ContentMatch { text:string; start:number; end:number; match:string; before:string; after:string }

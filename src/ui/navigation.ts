@@ -105,8 +105,10 @@ _buildSortSelect(q) {
             return sel;
         }
 
-_selectMode(mode) {
+_selectMode(mode,runSearch=true) {
+            if(this._mode!==mode)this._resultCategory='all';
             this._mode = mode;
+            this._syncSearchAction();
             const mcfg = this._modeConfig()[mode];
             const iconWrap = this._scopeBtn.querySelector("span");
             if (iconWrap) this._setIcon(iconWrap, mcfg.icon, PILL_ICON_SIZE);
@@ -120,9 +122,9 @@ _selectMode(mode) {
                 this._applyPanelBtnStyle(this._vaultPanelOpen);
             }
             this._hideDropdown();
-            if (this._input.value.trim()) this._doSearch(this._input.value.trim());
+            if (runSearch && this._input.value.trim()) this._doSearch(this._input.value.trim());
             // 切模式不该在触摸设备上弹出输入法（原先无条件 focus，手机上一按模式键就弹键盘）
-            this._focusInput();
+            if(runSearch)this._focusInput();
 
             // ── 需求2：Pill 按钮标签随模式更新 ─────────────────────────────
             if (!this._contentToggleLabelEl) return;
@@ -158,11 +160,11 @@ _showDropdown() {
                 this._closePanel({ restoreDropdown: false });
             }
             this._dropdown.style.display = "block";
-            this._raiseFloat(this._dropdown);
-            this._startReposition();
+            if(this.presentation!=='page') {this._raiseFloat(this._dropdown);this._startReposition();}
         }
 
 _hideDropdown() {
+            if(this.presentation==='page'&&this._resultKind==='results'&&this._input.value.trim())return;
             this._dropdown.style.display = "none";
             this._activeIdx = -1;
             this._itemEls = [];
@@ -189,7 +191,7 @@ _startReposition() {
                 // 底部卡片形态下面板与菜单不参与锚定跟踪
                 const panelNeedsTrack = this._isPanelVisible() && !this._bottomSheet;
                 const menuNeedsTrack  = this._isScopeMenuOpen() && !this._bottomSheet;
-                if (this._dropdown.style.display !== "none" ||
+                if ((this.presentation!=='page' && this._dropdown.style.display !== "none") ||
                     menuNeedsTrack ||
                     panelNeedsTrack) {
                     this._repositionFloats();
@@ -232,12 +234,15 @@ _repositionFloats() {
             const dropLeft  = Math.max(MARGIN, Math.min(rect.left, vw - dropWidth - MARGIN));
             // 移动端：下方剩余高度不足时动态缩减 maxHeight
             const availBelow = vh - dropTop - MARGIN;
+            if(this.presentation!=='page') {
             this._dropdownInner.style.maxHeight = Math.max(120, Math.min(400, availBelow)) + "px";
             Object.assign(this._dropdown.style, {
                 top:   dropTop + "px",
                 left:  dropLeft + "px",
                 width: dropWidth + "px"
             });
+
+            }
 
             // ── 模式切换菜单（底部卡片形态下由 _applyScopeMenuPresentation 定格，不锚定）──
             if (this._isScopeMenuOpen() && !this._bottomSheet) {
@@ -285,23 +290,20 @@ _prepBar(kind) {
             try {
                 const el = this._barLeft;
                 if (!el) return;
-                if (el.empty) el.empty(); else while (el.firstChild) el.removeChild(el.firstChild);
                 const isHistory = kind === "history";
+                if(isHistory)el.empty();
+                this._resultKind=kind;
                 // 右区按钮显隐：清除历史只在历史视图；在 Obsidian 打开只在结果视图（历史视图里没有查询词）
                 if (this._clearHistoryBtn) this._clearHistoryBtn.style.display = "none";
-                if (this._cornerBtnEl) this._cornerBtnEl.style.display = isHistory ? "none" : "flex";
+                if (this._cornerBtnEl) this._cornerBtnEl.style.display = isHistory || this.presentation==='page' ? "none" : "flex";
+                if(isHistory) {el.removeClass('primecore-result-tabs');el.removeAttribute('role');el.removeAttribute('aria-label');this._dropdownInner.removeAttribute('role');}
+                else this._dropdownInner.setAttribute('role','tabpanel');
                 if (isHistory) {
                     if (this._toggleAllBtn) this._toggleAllBtn.style.display = "none";
                     return;
                 }
-                const iconSpan = el.createSpan();
-                Object.assign(iconSpan.style, { display: "inline-flex", alignItems: "center", flexShrink: "0", color: "var(--text-muted)" });
-                this._setIcon(iconSpan, "search", 13);
-                const labelEl = el.createSpan({ text: "搜索结果" });
-                Object.assign(labelEl.style, {
-                    fontSize: "11px", color: "var(--text-muted)", fontWeight: "600",
-                    overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap"
-                });
+                this._renderResultCategories();
+                return;
             } catch (e) {
                 this._log("error", "[SearchBar] 顶栏上下文切换失败:", e);
             }

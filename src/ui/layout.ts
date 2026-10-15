@@ -462,8 +462,8 @@ _buildDropdown() {
             const cancelAnimationFrame = window.cancelAnimationFrame.bind(window);
 
             // 挂到 body，脱离 overflow 裁剪链；data-sb-float 用于下次渲染时批量清除
-            this._dropdown = document.body.createDiv();
-            this._dropdown.setAttribute("data-sb-float", "1");
+            this._dropdown = (this.presentation==='page'?this._wrap:document.body).createDiv({cls:'primecore-results'});
+            if(this.presentation!=='page')this._dropdown.setAttribute('data-sb-float','1');
             Object.assign(this._dropdown.style, {
                 position: "fixed", zIndex: "9100",
                 background: "var(--background-primary)",
@@ -472,7 +472,11 @@ _buildDropdown() {
                 boxShadow: "0 8px 24px rgba(0,0,0,0.18)",
                 display: "none", overflow: "hidden", minWidth: "240px"
             });
-            this._listen(this._dropdown, "pointerdown", () => this._raiseFloat(this._dropdown), { passive: true });
+            if(this.presentation==='page') {
+                this._wrap.addClass('primecore-search-page');this._dropdown.addClass('primecore-results-inline');
+                Object.assign(this._dropdown.style,{position:'relative',zIndex:'auto',boxShadow:'none',minWidth:'0'});
+            }
+            this._listen(this._dropdown, "pointerdown", () => {if(this.presentation!=='page')this._raiseFloat(this._dropdown);}, { passive: true });
             // 结果/历史下拉内的触摸手势先收起输入法（见 _guardLayerKeyboard）
             this._guardLayerKeyboard(this._dropdown);
             // 通用顶栏（占位布局，不随内容滚动）——左右两区：
@@ -480,7 +484,7 @@ _buildDropdown() {
             //   右区 = 操作按钮：清除历史 / 在 Obsidian 打开 / 全部展开收起
             // Universal top bar (occupies layout space; does not scroll with the content). Left = context,
             // right = actions. The left side is rebuilt on every render by _prepBar().
-            const _dropTopBar = this._dropdown.createDiv();
+            const _dropTopBar = this._dropdown.createDiv({cls:'primecore-results-toolbar'});
             Object.assign(_dropTopBar.style, {
                 display: "flex",
                 alignItems: "center",
@@ -534,14 +538,19 @@ _buildDropdown() {
             });
             const _cornerIconSpan = _cornerBtnEl.createSpan();
             Object.assign(_cornerIconSpan.style, { display: "inline-flex", alignItems: "center", pointerEvents: "none" });
-            this._setIcon(_cornerIconSpan, "external-link", 13);
-            _cornerBtnEl.title = "在 Obsidian 搜索中打开";
+            this._setIcon(_cornerIconSpan, "maximize-2", 13);
+            _cornerBtnEl.createSpan({text:"在搜索页打开"});
+            _cornerBtnEl.addClass("primecore-open-results-page");
+            _cornerBtnEl.style.width="auto";
+            _cornerBtnEl.style.gap="4px";
+            _cornerBtnEl.title = "在搜索页打开";
+            _cornerBtnEl.setAttribute("aria-label","在搜索页打开");
             this._listen(_cornerBtnEl, "mouseenter", () => { _cornerBtnEl.style.background = "var(--background-modifier-hover)"; });
             this._listen(_cornerBtnEl, "mouseleave", () => { _cornerBtnEl.style.background = "transparent"; });
-            const cornerBtnHandler = this._makeTouchHandler((e) => { e.stopPropagation(); this._executeSearch(); });
+            const cornerBtnHandler = this._makeTouchHandler((e) => { e.stopPropagation(); this._openResultsPage(); });
             this._listen(_cornerBtnEl, "touchstart", cornerBtnHandler.onTouchStart, { passive: true });
             this._listen(_cornerBtnEl, "touchend", (e) => { e.stopPropagation(); cornerBtnHandler.onTouchEnd(e); });
-            this._listen(_cornerBtnEl, "click", (e) => { e.stopPropagation(); this._executeSearch(); });
+            this._listen(_cornerBtnEl, "click", (e) => { e.stopPropagation(); this._openResultsPage(); });
             this._cornerBtnEl = _cornerBtnEl;
 
             // 全部展开 / 收起（专项分组；图标与 tooltip 反映点击后的动作，由 _renderDropdown 刷新）
@@ -564,7 +573,7 @@ _buildDropdown() {
             this._toggleAllBtn = _toggleAllBtn;
 
             // 内部可滚动容器
-            this._dropdownInner = this._dropdown.createDiv();
-            Object.assign(this._dropdownInner.style, { overflowY: "auto", maxHeight: "400px" });
+            this._dropdownInner = this._dropdown.createDiv({attr:{id:'primecore-results-'+crypto.randomUUID()}});
+            Object.assign(this._dropdownInner.style, { overflowY: this.presentation==='page'?'visible':'auto', maxHeight: this.presentation==='page'?'none':'400px' });
         }
 };
