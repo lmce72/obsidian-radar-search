@@ -21,7 +21,6 @@ export default class PrimeCoreSearchPlugin extends Plugin {
   async onload() {
     registerPluginIcon();
     this.components=new Map();
-    this.settingsDialogs=new Set();
     this._stopping=false;
     this._refreshQueue=Promise.resolve();
     this.store=new SettingsStore(this);
@@ -91,7 +90,6 @@ export default class PrimeCoreSearchPlugin extends Plugin {
   }
   onunload() {
     this._stopping=true;
-    for(const dialog of [...this.settingsDialogs])dialog.close();
     this.floatingSearch?.close();
     for (const container of [...this.components.keys()]) this.unmount(container);
     this.indexEngine?.dispose();

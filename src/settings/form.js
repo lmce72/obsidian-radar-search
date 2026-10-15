@@ -2,12 +2,13 @@ import { Setting, Notice } from 'obsidian';
 import { DEFAULT_SETTINGS, CHOICES } from './schema.js';
 import { MODEL_SPECS } from './models.js';
 import { CollectionEditor, BooleanModelEditor } from './editors.js';
-import { SettingsDialog } from './dialogs.js';
+import { ActionButton } from './controls.js';
 import { LABELS, DESCRIPTIONS, PLACEHOLDERS, VAULT_OPTION_KEYS } from './fields.js';
 
 export class SettingsForm {
-  constructor(plugin,container) {
+  constructor(plugin,container,navigation) {
     this.plugin=plugin;this.app=plugin.app;this.containerEl=container;
+    this.navigation=navigation;
     this.choiceControls=new Map();this.editors=new Map();this.fieldRows=new Map();
   }
   async saveChanges(changes) {
@@ -15,6 +16,13 @@ export class SettingsForm {
     catch(error) {new Notice(`设置未保存：${error.message}`);return false;}
   }
   async save(key,value) {return this.saveChanges({[key]:value});}
+  openModel(key) {
+    this.navigation.push({title:LABELS[key],render:(parent,view)=>{
+      view.form=new SettingsForm(this.plugin,parent,this.navigation);
+      const Editor=key==='resultGroupState'?BooleanModelEditor:CollectionEditor;
+      view.form.editors.set(key,new Editor(view.form,key,parent,view.toolbar));
+    }});
+  }
   refreshVisibility() {
     const perMode=this.plugin.settings.placeholderType==='custom';
     for(const key of ['placeholder_global','placeholder_vault','placeholder_web']) {
@@ -33,11 +41,14 @@ export class SettingsForm {
     const row=new Setting(this.containerEl).setName(LABELS[key]).setDesc(DESCRIPTIONS[key]||'');
     this.fieldRows.set(key,row);this.refreshVisibility();
     if(key==='vaultOptions') {
-      row.addButton(button=>button.setButtonText('配置搜索选项').onClick(()=>{
-        const dialog=new SettingsDialog(this.plugin,{title:'Vault 搜索选项',render:parent=>{
-          dialog.form=new SettingsForm(this.plugin,parent);VAULT_OPTION_KEYS.forEach(option=>dialog.form.addField(option));
-        }});dialog.open();
-      }));return;
+      new ActionButton(row.controlEl,{icon:'sliders-horizontal',label:'配置搜索选项',onClick:()=>{
+        this.navigation.push({title:'Vault 搜索选项',render:(parent,view)=>{
+          view.form=new SettingsForm(this.plugin,parent,this.navigation);VAULT_OPTION_KEYS.forEach(option=>view.form.addField(option));
+        }});
+      }});return;
+    }
+    if(['excludePaths','resultGroupState'].includes(key)) {
+      new ActionButton(row.controlEl,{icon:key==='excludePaths'?'folder-minus':'list-tree',label:'配置',onClick:()=>this.openModel(key)});return;
     }
     const value=this.plugin.settings[key];
     if(MODEL_SPECS[key]) {this.editors.set(key,new CollectionEditor(this,key,this.containerEl));return;}

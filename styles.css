@@ -12,3 +12,44 @@
   width: var(--icon-size, 18px);
   height: var(--icon-size, 18px);
 }
+
+.primecore-settings-toolbar,
+.primecore-settings-toolbar-leading,
+.primecore-settings-toolbar-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--size-4-2);
+}
+.primecore-settings-toolbar {
+  margin-block: var(--size-4-2);
+  background: transparent;
+}
+.primecore-settings-toolbar-title {
+  flex: 1;
+  font-weight: var(--font-semibold);
+  color: var(--text-normal);
+}
+button.primecore-settings-action,
+button.primecore-settings-action:hover,
+button.primecore-settings-action:active {
+  display: inline-flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: var(--size-4-1);
+  white-space: nowrap;
+  background: transparent !important;
+  background-image: none !important;
+  box-shadow: none !important;
+  border: none;
+  color: var(--text-normal);
+}
+.primecore-settings-action-icon {
+  display: inline-flex;
+  align-items: center;
+}
+.primecore-settings-action-icon .svg-icon {
+  width: var(--icon-xs);
+  height: var(--icon-xs);
+}
