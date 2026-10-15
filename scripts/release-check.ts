@@ -1,0 +1,10 @@
+import {readFileSync} from 'node:fs';
+const read=(file:string)=>JSON.parse(readFileSync(file,'utf8'));
+const manifest=read('manifest.json');
+const pkg=read('package.json');
+const versions=read('versions.json');
+const tag=process.argv[2]||manifest.version;
+if(!/^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$/.test(tag))throw new Error('Release tags must be semantic versions without a v prefix.');
+if(tag!==manifest.version||tag!==pkg.version)throw new Error('Tag, manifest and package versions must match exactly.');
+if(versions[tag]!==manifest.minAppVersion)throw new Error('versions.json must include the matching minimum Obsidian version.');
+console.log(`Validated Radar Search ${tag}; tag has no v prefix.`);

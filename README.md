@@ -1,13 +1,13 @@
-# PrimeCore Search
+# Radar Search
 
-将 PrimeCore 搜索栏拆分成可独立构建的 Obsidian 插件。提供 Vault、全局及互联网搜索，正文索引、中文 bigram 检索、命令、属性、标签、书签、链接、搜索预设和历史分页。
+Radar Search 是一款用于 Obsidian 的统一搜索插件。提供 Vault、全局及互联网搜索，正文索引、中文 bigram 检索、命令、属性、标签、书签、链接、搜索预设和历史分页。
 
 ## 使用
 
-1. 执行 `bun run build`。
-2. 将 `dist/main.js`、`dist/manifest.json`、`dist/styles.css` 复制到目标仓库的 `.obsidian/plugins/primecore-search/`。仓库使用自定义配置目录时，以该目录为准。
-3. 在 Obsidian 的第三方插件中启用 **PrimeCore Search**。
-4. 从命令面板选择 **打开浮动搜索框** 或 **打开搜索页**，两者为独立命令，也可以分别绑定快捷键。点击搜索 Ribbon 按钮默认打开浮动搜索框。相关选项均位于 **设置 → PrimeCore Search**。
+1. 从 [GitHub Releases](https://github.com/lmce72/obsidian-radar-search/releases) 下载 `main.js`、`manifest.json`、`styles.css`，或使用下方开发命令自行构建。
+2. 将 这三个文件 复制到目标仓库的 `.obsidian/plugins/primecore-search/`。仓库使用自定义配置目录时，以该目录为准。
+3. 在 Obsidian 的第三方插件中启用 **Radar Search**。
+4. 从命令面板选择 **打开浮动搜索框** 或 **打开搜索页**，两者为独立命令，也可以分别绑定快捷键。点击搜索 Ribbon 按钮默认打开浮动搜索框。相关选项均位于 **设置 → Radar Search**。
 
 浮动搜索框直接挂载搜索栏容器，宽度为视口的 70%，水平居中，顶部位于视口高度的 30% 处。后方遮罩复用 Obsidian 命令面板的 `modal-container mod-dim` 和 `modal-bg` 样式，颜色采用原生 `--background-modifier-cover`，透明度及效果由 Obsidian 和当前主题控制；搜索栏本身保持原有不透明度。搜索模式、搜索、搜索选项和清除按钮的背景使用 `--background-primary`，悬停背景使用 `--background-secondary`，随主题自动变化。打开后直接聚焦输入框，按 Esc 或点击遮罩关闭。搜索页在独立标签页打开，再次执行命令时激活已有搜索页并聚焦输入框。两种入口共享设置、历史与索引，同时打开时各自保留搜索栏状态。
 
@@ -52,9 +52,10 @@
 
 ## 开发
 
-需要 Bun 1.3+，构建无额外 npm 依赖，Obsidian API 由宿主提供。
+源码、构建脚本和测试均使用 TypeScript，需要 Bun 1.3+。开发依赖包括 TypeScript 与 Obsidian 类型，运行时 Obsidian API 由宿主提供。
 
 ```sh
+bun install --frozen-lockfile
 bun run check
 bun test --timeout 5000
 bun run build
@@ -62,7 +63,7 @@ bun run build
 
 | 目录 | 职责 |
 | --- | --- |
-| `src/main.js` | 插件生命周期、命令、视图、Markdown 内嵌与实例管理 |
+| `src/main.ts` | 插件生命周期、命令、视图、Markdown 内嵌与实例管理 |
 | `src/settings/` | 默认值、校验、持久化、表格、顶栏与设置页内导航 |
 | `src/search/` | Vault / 全局 / Web 查询、元数据、摘要与索引引擎 |
 | `src/history/` | 历史展示与并发安全存储 |
@@ -72,3 +73,5 @@ bun run build
 搜索组件按职责拆分为行为 mixin。`SearchBarComponent` 组合行为并持有 UI 状态，继承 Obsidian `Component` 管理资源。设置主视图与子视图共用 `SettingsForm`，`SettingsNavigation` 管理视图栈，`ActionToolbar` 统一操作布局。各模块直接维护，构建不读取原仓库或重新提取代码。
 
 测试覆盖当前配置校验、废弃字段清理、设置可达性、默认选择同步、串行持久化、多实例历史写入、防滚动误触、中文全文索引和引擎隔离。
+
+发版规则见 [AGENT.MD](AGENT.MD)：版本号及 Git tag 不加 `v` 前缀，例如 `1.0.0`；发布前运行 `bun run release:check 1.0.0`。

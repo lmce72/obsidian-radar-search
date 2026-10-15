@@ -1,9 +1,9 @@
 {
   "id": "primecore-search",
-  "name": "PrimeCore Search",
+  "name": "Radar Search",
   "version": "1.0.0",
   "minAppVersion": "1.5.0",
-  "description": "Vault、命令、属性、链接与互联网搜索，支持中文全文索引、预设与搜索历史。",
+  "description": "Unified vault, command, property, link, and web search, with CJK full-text indexing and a floating search bar.",
   "author": "CoreVortex",
   "isDesktopOnly": false
 }

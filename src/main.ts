@@ -1,0 +1,110 @@
+import { Plugin, ItemView, MarkdownRenderChild, Notice, Component, type WorkspaceLeaf } from 'obsidian';
+import { SearchBarComponent } from './ui/search-bar.ts';
+import { FloatingSearch } from './ui/floating-search.ts';
+import { createSearchIndexEngine } from './search/index-engine.ts';
+import { SettingsStore } from './settings/store.ts';
+import { SearchSettingTab } from './settings/tab.ts';
+import { HistoryStore } from './history/store.ts';
+import { PLUGIN_ICON_ID, registerPluginIcon } from './shared/plugin-icon.ts';
+import type {SearchSettings,SettingsPatch} from './types.ts';
+
+const VIEW_TYPE='primecore-search';
+class SearchView extends ItemView {
+  declare plugin:RadarSearchPlugin;
+
+  constructor(leaf:WorkspaceLeaf,plugin:RadarSearchPlugin) { super(leaf);this.plugin=plugin; }
+  getViewType() {return VIEW_TYPE;}
+  getDisplayText() {return 'Radar Search';}
+  getIcon() {return PLUGIN_ICON_ID;}
+  async onOpen() {this.contentEl.empty();await this.plugin.mount(this.contentEl,this);}
+  async onClose() {this.plugin.unmount(this.contentEl);}
+}
+
+export default class RadarSearchPlugin extends Plugin {
+  declare components:Map<HTMLElement,{component:SearchBarComponent;owner:Component}>;
+  declare _stopping:boolean;
+  declare _refreshQueue:Promise<void>;
+  declare store:SettingsStore;
+  declare settings:SearchSettings;
+  declare indexEngine:ReturnType<typeof createSearchIndexEngine>;
+  declare history:HistoryStore;
+  declare floatingSearch:FloatingSearch|null;
+
+  async onload() {
+    registerPluginIcon();
+    this.components=new Map();
+    this._stopping=false;
+    this._refreshQueue=Promise.resolve();
+    this.store=new SettingsStore(this);
+    this.settings=await this.store.load();
+    this.indexEngine=createSearchIndexEngine();
+    this.history=new HistoryStore(this);
+    await this.history.initialize();
+    this.addSettingTab(new SearchSettingTab(this.app,this));
+    this.registerView(VIEW_TYPE,leaf=>new SearchView(leaf,this));
+    this.addRibbonIcon(PLUGIN_ICON_ID,'打开浮动搜索框',()=>this.openFloatingSearch()).addClass('primecore-search-ribbon');
+    this.addCommand({id:'open-floating-search',name:'打开浮动搜索框',callback:()=>this.openFloatingSearch()});
+    this.addCommand({id:'open-search-page',name:'打开搜索页',callback:()=>this.openSearchPage()});
+    this.addCommand({id:'rebuild-index',name:'重建搜索索引',callback:()=>this.refreshComponents()});
+    this.registerMarkdownCodeBlockProcessor('primecore-search',async(_source,el,ctx)=>{
+      const owner=new MarkdownRenderChild(el);ctx.addChild(owner);await this.mount(el,owner);
+    });
+  }
+  report(level:'warn'|'error'|'log',...args:unknown[]) {
+    if (this.settings?.debug) console[level]('[Radar Search]',...args);
+    if (level==='error') new Notice(`Radar Search：${String(args[0])}`);
+  }
+  async updateSetting<K extends keyof SearchSettings>(key:K,value:SearchSettings[K],refresh=false) {
+    await this.store.update(key,value);
+    if (refresh) await this.refreshComponents();
+  }
+  async updateSettings(changes:SettingsPatch,refresh=true) {
+    await this.store.updateMany(changes);
+    if(refresh)await this.refreshComponents();
+  }
+  async mount(container:HTMLElement,owner:Component) {
+    this.unmount(container);
+    const component=new SearchBarComponent(this,container);
+    const record={component,owner};
+    this.components.set(container,record);
+    component.register(()=>{if(this.components.get(container)===record)this.components.delete(container);});
+    owner.addChild(component);
+    await component.render();
+    return component;
+  }
+  unmount(container:HTMLElement) {
+    const record=this.components.get(container);
+    if (!record) return;
+    record.owner.removeChild(record.component);
+    this.components.delete(container);
+  }
+  async refreshComponents() {
+    const operation=this._refreshQueue.catch(error=>this.report('error','上次刷新失败',error)).then(()=>this.rebuildMountedComponents());
+    this._refreshQueue=operation;return operation;
+  }
+  async rebuildMountedComponents() {
+    if(this._stopping)return;
+    const mounted=[...this.components.entries()];
+    mounted.forEach(([container])=>this.unmount(container));
+    this.indexEngine.dispose();
+    for (const [container,{owner}] of mounted) if(!this._stopping && container.isConnected) await this.mount(container,owner);
+  }
+  openFloatingSearch() {
+    if(this.floatingSearch) {this.components.get(this.floatingSearch.contentEl)?.component._focusInput();return;}
+    this.floatingSearch=new FloatingSearch(this);
+    this.floatingSearch.open();
+  }
+  async openSearchPage() {
+    let leaf=this.app.workspace.getLeavesOfType(VIEW_TYPE)[0];
+    if (!leaf) {leaf=this.app.workspace.getLeaf('tab');await leaf.setViewState({type:VIEW_TYPE,active:true});}
+    await this.app.workspace.revealLeaf(leaf);
+    if(leaf.view instanceof SearchView)this.components.get(leaf.view.contentEl)?.component._focusInput();
+  }
+  onunload() {
+    this._stopping=true;
+    this.floatingSearch?.close();
+    for (const container of [...this.components.keys()]) this.unmount(container);
+    this.indexEngine?.dispose();
+    this.app.workspace.detachLeavesOfType(VIEW_TYPE);
+  }
+}

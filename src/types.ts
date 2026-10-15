@@ -1,0 +1,29 @@
+export type SearchMode = 'vault' | 'global' | 'web';
+export type SortMode = 'relevance' | 'mtime-desc' | 'mtime-asc' | 'ctime-desc' | 'ctime-asc' | 'alpha-asc' | 'alpha-desc';
+export interface SearchEngine {id:string;name:string;url:string;suggest:string;enabled:boolean}
+export interface WebSource {label:string;domain:string}
+export interface SearchPreset {name:string;mode:'白名单'|'黑名单';excludeFolders:string[];icon?:string}
+export interface IndexSettings {enabled:boolean;content:boolean;bigrams:boolean;debug:boolean}
+export interface SearchSettings {
+  excludePaths:string[];defaultMode:SearchMode;placeholderType:'unified'|'custom';placeholder:string;
+  placeholder_global:string;placeholder_vault:string;placeholder_web:string;
+  browserTarget:'external'|'internal'|'internal-window';historyRetentionMode:'forever'|'custom';historyRetentionDays:number;
+  historyPageSize:number;dropdownPageSize:number;searchSheetBreakpoint:number;
+  vaultContentSearch:boolean;vaultContentSearchMaxResults:number;searchWikiLinks:boolean;searchMdLinks:boolean;
+  searchBookmarks:boolean;searchTags:boolean;searchCommands:boolean;searchNonMarkdown:boolean;searchProperties:boolean;
+  extendedContext:boolean;vaultSortMode:SortMode;limitContentResults:boolean;searchPresets:SearchPreset[];defaultPreset:string;
+  activeEngineId:string|null;webSources:WebSource[];engines:SearchEngine[];resultGroupState:Record<string,boolean>;
+  searchIndex:IndexSettings;debug:boolean;
+}
+export type SettingsPatch=Partial<SearchSettings>;
+export interface SearchHistoryRecord {q:string;mode:SearchMode;ts:number;file?:string;date?:string}
+export interface SearchItem {
+  label:string;action:()=>void;icon?:string;path?:string;sub?:string;snippet?:string;
+  trailing?:{icon:string;title:string;onClick:()=>void};
+}
+export interface SearchGroup {title:string;items:SearchItem[]}
+export interface PersistenceHost {
+  loadData():Promise<unknown>;
+  saveData(settings:SearchSettings):Promise<unknown>;
+  report(level:'warn'|'error'|'log',...args:unknown[]):void;
+}
