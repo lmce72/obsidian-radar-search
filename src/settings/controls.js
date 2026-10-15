@@ -1,4 +1,17 @@
 import { ButtonComponent, setIcon } from 'obsidian';
+import { PLUGIN_ICON_ID } from '../shared/plugin-icon.js';
+
+const TITLE_ICONS = {
+  '设置':'settings-2','搜索栏':PLUGIN_ICON_ID,'Vault 搜索':'vault','互联网搜索':'globe','历史与索引':'history',
+  '搜索预设':'sliders-horizontal','搜索引擎':'compass','互联网信息源':'rss','索引选项':'database',
+  '排除路径':'folder-minus','结果分组展开状态':'list-tree','Vault 搜索选项':'sliders-horizontal','路径列表':'folder'
+};
+export function renderSettingTitle(element,title) {
+  element.empty();if(!title)return;
+  const icon=element.createSpan({cls:'primecore-settings-title-icon',attr:{'aria-hidden':'true'}});
+  setIcon(icon,TITLE_ICONS[title]||(title.endsWith(' · 路径')?'folder':'settings-2'));
+  element.createSpan({text:title});
+}
 
 export class ActionButton extends ButtonComponent {
   constructor(parent,{icon,label,onClick}) {
@@ -18,7 +31,8 @@ export class ActionToolbar {
   constructor(parent,title='') {
     this.el=parent.createDiv({cls:'primecore-settings-toolbar',attr:{role:'toolbar','aria-label':title||'编辑操作'}});
     this.leadingEl=this.el.createDiv({cls:'primecore-settings-toolbar-leading'});
-    this.titleEl=this.el.createSpan({cls:'primecore-settings-toolbar-title',text:title});
+    this.titleEl=this.el.createSpan({cls:'primecore-settings-toolbar-title'});
+    renderSettingTitle(this.titleEl,title);
     this.actionsEl=this.el.createDiv({cls:'primecore-settings-toolbar-actions'});
   }
   add(icon,label,onClick) {return new ActionButton(this.actionsEl,{icon,label,onClick});}

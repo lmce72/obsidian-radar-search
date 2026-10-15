@@ -26,9 +26,46 @@
   background: transparent;
 }
 .primecore-settings-toolbar-title {
+  display: flex;
+  align-items: center;
+  gap: var(--size-4-2);
   flex: 1;
+  min-width: 0;
+  font-size: var(--font-ui-small);
   font-weight: var(--font-semibold);
   color: var(--text-normal);
+}
+.primecore-settings-title-icon {
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+  color: var(--text-muted);
+}
+.primecore-settings-title-icon .svg-icon {
+  width: var(--icon-s);
+  height: var(--icon-s);
+}
+.primecore-settings-section.setting-item {
+  margin: 0;
+  padding: var(--size-4-4) 0 var(--size-4-2);
+  background: transparent !important;
+  border: none;
+  box-shadow: none;
+}
+.primecore-settings-section.setting-item:first-child {
+  padding-top: 0;
+}
+.primecore-settings-section .setting-item-name {
+  display: flex;
+  align-items: center;
+  gap: var(--size-4-2);
+  margin: 0;
+  font-size: var(--font-ui-medium) !important;
+  font-weight: var(--font-semibold);
+  color: var(--text-muted);
+}
+.primecore-settings-model-description {
+  margin-bottom: var(--size-4-2);
 }
 button.primecore-settings-action,
 button.primecore-settings-action:hover,

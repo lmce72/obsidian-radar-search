@@ -5,7 +5,7 @@ import { ActionToolbar, ActionButton } from './controls.js';
 export class SettingsNavigation {
   constructor(container) {this.container=container;this.stack=[];}
   get current() {return this.stack[this.stack.length-1];}
-  push({title,render,apply}) {
+  push({title,render,apply,showHeader=true}) {
     const previous=this.current;
     if(previous) {
       previous.scrollTop=this.container.scrollTop;
@@ -15,6 +15,7 @@ export class SettingsNavigation {
     }
     const view={title,apply,root:this.container.createDiv({cls:'primecore-settings-view',attr:{'data-settings-view':title}})};
     view.toolbar=new ActionToolbar(view.root,title);
+    view.toolbar.el.toggle(showHeader);
     if(previous)new ActionButton(view.toolbar.leadingEl,{icon:'arrow-left',label:'返回',onClick:()=>this.back()});
     if(apply)view.applyButton=view.toolbar.add('check','应用',()=>this.applyCurrent());
     view.status=view.root.createDiv({cls:'setting-item-description',attr:{role:'status'}});

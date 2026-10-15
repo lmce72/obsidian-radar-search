@@ -2,7 +2,7 @@ import { Setting, TextComponent, DropdownComponent, ToggleComponent, TFolder } f
 import { IconRenderer } from '../shared/icons.js';
 import { CollectionDraft, booleanFields } from './models.js';
 import { ActionButton, ActionToolbar } from './controls.js';
-import { LABELS } from './fields.js';
+import { LABELS, DESCRIPTIONS } from './fields.js';
 
 // Shared draft/save/reset behavior for every structured model.
 // 所有结构化模型统一使用草稿、保存与还原交互。
@@ -13,6 +13,7 @@ class ModelEditor {
     this.toolbar=toolbar||new ActionToolbar(this.root,LABELS[key]);
     this.saveButton=this.toolbar.add('save','保存修改',()=>this.commit()).setDisabled(true);
     this.resetButton=this.toolbar.add('rotate-ccw','还原',()=>{this.reset();this.render();this.setDirty(false);}).setDisabled(true);
+    if(DESCRIPTIONS[key])this.root.createDiv({cls:'setting-item-description primecore-settings-model-description',text:DESCRIPTIONS[key]});
     this.body=this.root.createDiv();
     this.status=this.root.createDiv({cls:'setting-item-description'});this.status.setAttribute('role','status');
     this.dirty=false;

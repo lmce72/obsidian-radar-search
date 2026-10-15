@@ -38,6 +38,10 @@ export class SettingsForm {
     }
   }
   addField(key) {
+    if((MODEL_SPECS[key]&&key!=='excludePaths')||key==='searchIndex') {
+      const Editor=MODEL_SPECS[key]?CollectionEditor:BooleanModelEditor;
+      this.editors.set(key,new Editor(this,key,this.containerEl));return;
+    }
     const row=new Setting(this.containerEl).setName(LABELS[key]).setDesc(DESCRIPTIONS[key]||'');
     this.fieldRows.set(key,row);this.refreshVisibility();
     if(key==='vaultOptions') {
@@ -51,8 +55,6 @@ export class SettingsForm {
       new ActionButton(row.controlEl,{icon:key==='excludePaths'?'folder-minus':'list-tree',label:'配置',onClick:()=>this.openModel(key)});return;
     }
     const value=this.plugin.settings[key];
-    if(MODEL_SPECS[key]) {this.editors.set(key,new CollectionEditor(this,key,this.containerEl));return;}
-    if(['resultGroupState','searchIndex'].includes(key)) {this.editors.set(key,new BooleanModelEditor(this,key,this.containerEl));return;}
     if(typeof DEFAULT_SETTINGS[key]==='boolean') {row.addToggle(control=>control.setValue(value).onChange(next=>this.save(key,next)));return;}
     if(CHOICES[key]) {row.addDropdown(control=>control.addOptions(CHOICES[key]).setValue(value).onChange(next=>this.save(key,next)));return;}
     if(['defaultPreset','activeEngineId'].includes(key)) {
