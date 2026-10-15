@@ -28,7 +28,6 @@ export const withResultPresentation=Base=>class extends Base {
   }
   _syncSearchAction() {
     this._goBtn.style.display=this._mode==='web'?'flex':'none';
-    if(this._shellFilterButton)this._shellFilterButton.buttonEl.style.display=this._mode==='web'?'none':'inline-flex';
     if(this._panelQuickFilterButton)this._panelQuickFilterButton.buttonEl.style.display=this._mode==='web'?'none':'inline-flex';
     this._goBtn.setAttribute('aria-label','搜索互联网');
   }

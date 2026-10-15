@@ -408,8 +408,6 @@ _buildShell(rgb) {
             // 插入 input 左侧（scopeBtn 右侧）
             // 选项按钮插到「输入行」之前（DOM 顺序：模式 / 选项 / [输入 搜索 清除]）
             this._pill.insertBefore(this._contentToggleBtn, this._inputRow);
-            this._shellFilterButton=this._addQuickFilterButton(this._pill);
-            this._pill.insertBefore(this._shellFilterButton.buttonEl,this._inputRow);
             this._contentToggleBtn.setAttribute('aria-label','搜索选项');
             this._inputRow.appendChild(this._goBtn);
 
