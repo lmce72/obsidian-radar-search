@@ -17,15 +17,15 @@ export class ActionButton extends ButtonComponent {
   declare icon: string;
 
   constructor(parent:HTMLElement,{icon,label,onClick}:{icon:string;label:string;onClick?:(event:MouseEvent)=>unknown}) {
-    super(parent);this.icon=icon;this.buttonEl.addClass('primecore-settings-action');
+    super(parent);this.icon=icon;this.buttonEl.addClasses(['primecore-settings-action','primecore-hover-action']);
     this.setButtonText(label);if(onClick)this.onClick(onClick);
   }
   setButtonText(label) {
     this.buttonEl.empty();
     const icon=this.buttonEl.createSpan({cls:'primecore-settings-action-icon',attr:{'aria-hidden':'true'}});
     setIcon(icon,this.icon);
-    this.buttonEl.createSpan({text:label});
-    this.buttonEl.setAttribute('aria-label',label);return this;
+    this.buttonEl.createSpan({cls:'primecore-action-label',text:label});
+    this.buttonEl.setAttribute('aria-label',label);this.buttonEl.setAttribute('title',label);return this;
   }
 }
 

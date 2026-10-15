@@ -233,10 +233,15 @@ _bindEvents() {
             const scroller = this._wrap.closest(".cm-scroller") || window;
             this._listen(scroller, "scroll", _onScrollResize, { passive: true });
             this._listen(window, "resize", _onScrollResize, { passive: true });
+            if(window.visualViewport) {
+                const viewport=window.visualViewport;
+                viewport.addEventListener('resize',_onScrollResize);viewport.addEventListener('scroll',_onScrollResize);
+                this.register(()=>{viewport.removeEventListener('resize',_onScrollResize);viewport.removeEventListener('scroll',_onScrollResize);});
+            }
 
             // 点击外部关闭浮层（dropdown / scopeMenu / vaultSearchPanel / 遮罩 都挂在 body，需特判）
             this._listen(document, "click", (e) => {
-                if(isDirectorySuggestion(e.target))return;
+                if(isDirectorySuggestion(e.target)||this._quickFilterMenu?.el.contains(e.target))return;
                 const inWrap  = this._wrap.contains(e.target);
                 const inDrop  = this._dropdown.contains(e.target);
                 const inMenu  = this._scopeMenu.contains(e.target);
@@ -260,6 +265,7 @@ _bindEvents() {
             const _cleanup = () => {
                 if (this._cleanedUp) return;      // 两个观察器都可能触发，重复清理必须是空操作
                 this._cleanedUp = true;
+                this._quickFilterMenu?.close();
                 this._stopReposition();
                 this._dropdown.remove();
                 this._scopeMenu.remove();

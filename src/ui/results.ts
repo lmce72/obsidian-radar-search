@@ -300,6 +300,9 @@ _renderDropdown(groups) {
                         this._listen(itemEl, "click", () => { item.action(); this._hideDropdown(); });
                     }
 
+                    if(item.path) {
+                        const filter=this._addQuickFilterButton(item.hits?itemEl.firstElementChild:itemEl,item.path);filter.buttonEl.addClass('primecore-result-exclusion-button');
+                    }
                     this._itemEls.push(itemEl);
                 }
 

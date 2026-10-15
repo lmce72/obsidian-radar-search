@@ -10,11 +10,12 @@ export const withResultPresentation=Base=>class extends Base {
   getSearchSession():SearchSession {
     const settings=structuredClone(this.cfg);
     for(const [field,key] of Object.entries(SESSION_FIELDS))Reflect.set(settings,key,this[field]);
-    return {query:this._input?.value.trim()||'',mode:this._mode,category:this._resultCategory,temporaryFilter:this._temporaryFilter?structuredClone(this._temporaryFilter):undefined,settings};
+    return {query:this._input?.value.trim()||'',mode:this._mode,category:this._resultCategory,quickExcludedPaths:[...this._quickExcludedPaths||[]],temporaryFilter:this._temporaryFilter?structuredClone(this._temporaryFilter):undefined,settings};
   }
   async applySearchSession(session:SearchSession) {
     ++this._historyVer;++this._vaultSearchVer;++this._webSearchVer;
     clearTimeout(this._debounceTimer);this._debounceTimer=null;
+    this._quickFilterMenu?.close();this._quickExcludedPaths=[...session.quickExcludedPaths||[]];
     this._resultToolView='results';this._toolListEditor?.dispose();
     this._temporaryFilter=session.temporaryFilter?structuredClone(session.temporaryFilter):null;
     this.cfg=structuredClone(session.settings);
@@ -27,6 +28,8 @@ export const withResultPresentation=Base=>class extends Base {
   }
   _syncSearchAction() {
     this._goBtn.style.display=this._mode==='web'?'flex':'none';
+    if(this._shellFilterButton)this._shellFilterButton.buttonEl.style.display=this._mode==='web'?'none':'inline-flex';
+    if(this._panelQuickFilterButton)this._panelQuickFilterButton.buttonEl.style.display=this._mode==='web'?'none':'inline-flex';
     this._goBtn.setAttribute('aria-label','搜索互联网');
   }
   _openResultsPage() {

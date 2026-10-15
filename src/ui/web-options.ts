@@ -303,7 +303,8 @@ _renderSourceChips(row, rgb) {
                 const addIconSpan = addBtn.createSpan();
                 Object.assign(addIconSpan.style, { display: "inline-flex", alignItems: "center", pointerEvents: "none" });
                 this._setIcon(addIconSpan, "plus", 12);
-                addBtn.createSpan({ text: "添加" });
+                addBtn.addClass('primecore-hover-action');addBtn.setAttribute('aria-label','添加信息源');
+                addBtn.createSpan({cls:'primecore-action-label',text:'添加'});
                 const addBtnHandler = this._makeTouchHandler(() => this._openSourceEditor(null, -1, addBtn, row, rgb));
                 this._listen(addBtn, "touchstart", addBtnHandler.onTouchStart, { passive: true });
                 this._listen(addBtn, "touchend", addBtnHandler.onTouchEnd);

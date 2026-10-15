@@ -408,6 +408,9 @@ _buildShell(rgb) {
             // 插入 input 左侧（scopeBtn 右侧）
             // 选项按钮插到「输入行」之前（DOM 顺序：模式 / 选项 / [输入 搜索 清除]）
             this._pill.insertBefore(this._contentToggleBtn, this._inputRow);
+            this._shellFilterButton=this._addQuickFilterButton(this._pill);
+            this._pill.insertBefore(this._shellFilterButton.buttonEl,this._inputRow);
+            this._contentToggleBtn.setAttribute('aria-label','搜索选项');
             this._inputRow.appendChild(this._goBtn);
 
             // 清除按钮：goBtn 右侧，有内容时出现，点击清空搜索词
@@ -539,7 +542,8 @@ _buildDropdown() {
             const _cornerIconSpan = _cornerBtnEl.createSpan();
             Object.assign(_cornerIconSpan.style, { display: "inline-flex", alignItems: "center", pointerEvents: "none" });
             this._setIcon(_cornerIconSpan, "maximize-2", 13);
-            _cornerBtnEl.createSpan({text:"在搜索页打开"});
+            _cornerBtnEl.addClass('primecore-hover-action');
+            _cornerBtnEl.createSpan({cls:'primecore-action-label',text:'在搜索页打开'});
             _cornerBtnEl.addClass("primecore-open-results-page");
             _cornerBtnEl.style.width="auto";
             _cornerBtnEl.style.gap="4px";

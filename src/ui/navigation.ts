@@ -1,3 +1,4 @@
+import {positionFloatingElement} from './floating-geometry.ts';
 import * as Obsidian from 'obsidian';
 import { moment } from '../shared/moment.ts';
 import { SHEET_BREAKPOINT, MIN_PANEL_H, PILL_ICON_SIZE, EXT_ICON } from '../shared/constants.ts';
@@ -121,7 +122,7 @@ _showDropdown() {
                 this._closeScopeMenu();
                 this._closePanel({ restoreDropdown: false });
             }
-            this._dropdown.style.display = "block";
+            this._dropdown.style.display = this.presentation==='page'?'block':'flex';
             if(this.presentation!=='page') {this._raiseFloat(this._dropdown);this._repositionFloats();this._startReposition();}
         }
 
@@ -190,20 +191,13 @@ _repositionFloats() {
             const vw     = window.innerWidth;
             const vh     = window.innerHeight;
 
-            // ── 搜索结果下拉 ──────────────────────────────────────────────────
-            const dropTop   = rect.bottom + GAP;
-            const dropWidth = Math.max(Math.min(rect.width, vw - MARGIN * 2), 240);
-            const dropLeft  = Math.max(MARGIN, Math.min(rect.left, vw - dropWidth - MARGIN));
-            // 移动端：下方剩余高度不足时动态缩减 maxHeight
-            const availBelow = vh - dropTop - MARGIN;
-            if(this.presentation!=='page') {
-            this._dropdownInner.style.maxHeight = Math.max(120, Math.min(400, availBelow)) + "px";
-            Object.assign(this._dropdown.style, {
-                top:   dropTop + "px",
-                left:  dropLeft + "px",
-                width: dropWidth + "px"
-            });
-
+            if(this.presentation!=='page'&&this._dropdown.style.display!=='none') {
+                this._dropdown.style.display='flex';this._dropdown.style.flexDirection='column';
+                const header=this._dropdown.firstElementChild;
+                const natural=(header?.scrollHeight||0)+this._dropdownInner.scrollHeight+2;
+                positionFloatingElement(this._dropdown,rect,Math.max(rect.width,240),natural);
+                this._dropdownInner.style.maxHeight='none';this._dropdownInner.style.minHeight='0';
+                this._dropdownInner.style.flex='1 1 auto';this._dropdownInner.style.overflowY='auto';
             }
 
             // ── 模式切换菜单（底部卡片形态下由 _applyScopeMenuPresentation 定格，不锚定）──
@@ -226,25 +220,7 @@ _repositionFloats() {
             // ── 搜索选项面板（底部卡片形态下由 _applyPanelPresentation 定格，不锚定）──
             if (this._isPanelVisible() && !this._bottomSheet) {
                 const bR        = this._contentToggleBtn.getBoundingClientRect();
-                const pW        = Math.min(this._vaultSearchPanel.offsetWidth || 240, vw - MARGIN * 2);
-                const pBelowTop = bR.bottom + GAP;
-                // 左缘对齐 btn 左缘（原为右对齐 btn 右缘），两端都不超出视口
-                const pLeft     = Math.max(MARGIN, Math.min(bR.left, vw - pW - MARGIN));
-                // 始终锚定在按钮下方（与桌面端一致）：下方空间不足时压缩面板高度并内部滚动，
-                // 不再整块翻转到按钮上方（平板等矮视口下翻转会让面板跑到按钮上面）。
-                // 仅当下方连 MIN_PANEL_H 都放不下时，才把面板上移到刚好完整可见的最小位移，
-                // 避免 fixed 元素被视口裁掉后底部条目无法滚动到。
-                const availBelow = vh - pBelowTop - MARGIN;
-                const pTop = availBelow >= MIN_PANEL_H
-                    ? pBelowTop
-                    : Math.max(MARGIN, vh - MARGIN - MIN_PANEL_H);
-                this._vaultSearchPanel.style.maxHeight = Math.max(MIN_PANEL_H, Math.min(480, vh - pTop - MARGIN)) + "px";
-                Object.assign(this._vaultSearchPanel.style, {
-                    top:      pTop + "px",
-                    left:     pLeft + "px",
-                    right:    "auto",
-                    maxWidth: (vw - MARGIN * 2) + "px"
-                });
+                positionFloatingElement(this._vaultSearchPanel,bR,Math.max(this._vaultSearchPanel.offsetWidth||240,240),this._vaultSearchPanel.scrollHeight,480);
             }
         }
 

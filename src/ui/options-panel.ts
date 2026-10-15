@@ -191,7 +191,11 @@ _buildVaultSearchPanel(rgb) {
             this._listen(closeBtn, "touchstart", closeBtnHandler.onTouchStart, { passive: true });
             this._listen(closeBtn, "touchend", closeBtnHandler.onTouchEnd);
             this._listen(closeBtn, "click", () => this._closePanel());
-            this._mkFloatHeader(this._vaultSearchPanel, "搜索选项", closeBtn);
+            const headerActions=this._vaultSearchPanel.createDiv({cls:'primecore-result-tools'});
+            this._panelQuickFilterButton=this._addQuickFilterButton(headerActions);
+            this._panelQuickFilterButton.buttonEl.style.display=this._mode==='web'?'none':'inline-flex';
+            headerActions.appendChild(closeBtn);
+            this._mkFloatHeader(this._vaultSearchPanel, '搜索选项', headerActions);
 
             // ── Tab 行（仅 global 模式显示，切换 vault/web 两栏）────────────────
             this._panelTabRow = this._vaultSearchPanel.createDiv();
@@ -223,7 +227,8 @@ _buildVaultSearchPanel(rgb) {
                 const iconSpan = div.createSpan();
                 Object.assign(iconSpan.style, { display: "inline-flex", alignItems: "center", pointerEvents: "none" });
                 this._setIcon(iconSpan, iconName, 13);
-                div.createSpan({ text: label });
+                div.addClass('primecore-hover-action');div.setAttribute('aria-label',label);
+                div.createSpan({cls:'primecore-action-label',text:label});
                 div._tabKey = tabKey;
                 div._iconSpan = iconSpan;
                 const tabHandler = this._makeTouchHandler(() => this._switchPanelTab(tabKey));
@@ -317,7 +322,8 @@ _buildVaultSearchPanel(rgb) {
                 const iconSpan = btn.createSpan();
                 Object.assign(iconSpan.style, { display: "inline-flex", alignItems: "center", pointerEvents: "none" });
                 this._setIcon(iconSpan, "arrow-right", 13);
-                btn.createSpan({ text });
+                btn.addClass('primecore-hover-action');btn.setAttribute('aria-label',text);
+                btn.createSpan({cls:'primecore-action-label',text});
                 return btn;
             };
 
@@ -384,7 +390,7 @@ _buildVaultSearchPanel(rgb) {
             _rebuildPresetOptions();
             this._rebuildPresetOptions = _rebuildPresetOptions;
             this._listen(presetSelect, "change", () => {
-                this._temporaryFilter=null;
+                this._quickExcludedPaths=[];this._temporaryFilter=null;
                 this._selectedPreset = presetSelect.value;
                 this._saveCfgKey("defaultPreset", this._selectedPreset);
                 const preset = (this.cfg.searchPresets || []).find(p => p.name === this._selectedPreset);

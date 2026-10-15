@@ -13,6 +13,7 @@ export const FILTER_HELP='每行一条：目录 Projects/Archive；glob:**/asset
 export function compilePathRule(raw:string):(path:string)=>boolean {
   const value=raw.trim();
   if(!value)throw new Error('请填写规则或删除空行');
+  if(value.startsWith('exclude:'))return compilePathRule(value.slice(8));
   if(value.startsWith('regex:')) {
     let source=value.slice(6),flags='';
     if(source.startsWith('/')) {
@@ -26,10 +27,11 @@ export function compilePathRule(raw:string):(path:string)=>boolean {
     return path=>{regex.lastIndex=0;return regex.test(path);};
   }
   const explicitGlob=value.startsWith('glob:');
-  const pattern=(explicitGlob?value.slice(5):value).replaceAll('\\','/').replace(/^\.\//,'').replace(/\/+$/,'');
+  const literal=value.startsWith('path:');
+  const pattern=(explicitGlob||literal?value.slice(5):value).replaceAll('\\','/').replace(/^\.\//,'').replace(/\/+$/,'');
   if(!pattern) {if(value==='/')return ()=>true;throw new Error('过滤规则不能为空');}
   if(pattern.startsWith('/')||pattern.split('/').includes('..'))throw new Error('请使用仓库内的相对路径');
-  if(explicitGlob||/[*?{[]/.test(pattern)) {
+  if(!literal&&(explicitGlob||/[*?{[]/.test(pattern))) {
     let match:(input:string)=>boolean;
     try {match=picomatch(pattern,{dot:true,nonegate:true,strictBrackets:true});}catch(error){throw new Error('glob 规则无效：'+error.message);}
     return path=>{
@@ -46,16 +48,20 @@ export function validatePathFilter(filter:PathFilter):PathFilter {
   const paths=filter.paths.map(path=>path.trim());
   if(new Set(paths).size!==paths.length)throw new Error('过滤规则重复，请合并或删除');
   paths.forEach(compilePathRule);
-  if(filter.mode==='白名单'&&!paths.length)throw new Error('仅搜索匹配项时，至少需要一条规则');
+  if(filter.mode==='白名单'&&!paths.some(path=>!path.startsWith('exclude:')))throw new Error('仅搜索匹配项时，至少需要一条包含规则');
   return {mode:filter.mode,paths};
 }
 export function excludedByFilter(filter:PathFilter):(value:string|{path:string})=>boolean {
-  const validated=validatePathFilter(filter),matchers=validated.paths.map(compilePathRule);
+  const validated=validatePathFilter(filter),matchers=validated.paths.filter(p=>!p.startsWith('exclude:')).map(compilePathRule);
+  const forced=validated.paths.filter(p=>p.startsWith('exclude:')).map(compilePathRule);
   return value=>{
     const path=(typeof value==='string'?value:value.path).replaceAll('\\','/');
     const match=matchers.some(test=>test(path));
-    return validated.mode==='白名单'?!match:match;
+    return forced.some(test=>test(path))||(validated.mode==='白名单'?!match:match);
   };
+}
+export function filterWithExclusions(filter:PathFilter,exclusions:string[]):PathFilter {
+  return {mode:filter.mode,paths:[...new Set([...filter.paths,...exclusions.map(rule=>filter.mode==='白名单'?'exclude:'+rule:rule)])]};
 }
 export function presetFromFilter(filter:PathFilter,name:string,existing:SearchPreset[]):SearchPreset {
   const trimmed=name.trim();

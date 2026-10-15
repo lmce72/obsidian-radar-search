@@ -58,7 +58,7 @@ test('each result group has its own tab, including hidden commands and link type
 test('page handoff carries local filters and clones settings without persisting them',async()=>{
   const {withResultPresentation}=await import('../src/ui/result-presentation.ts');
   const fixture=Object.assign(new (withResultPresentation(class {}))(),{
-    _temporaryFilter:{mode:'黑名单',paths:['glob:**/assets/**']},cfg:structuredClone(DEFAULT_SETTINGS),_mode:'vault',_resultCategory:'content',_input:{value:'query'},
+    _quickExcludedPaths:['path:Work/assets'],_temporaryFilter:{mode:'黑名单',paths:['glob:**/assets/**']},cfg:structuredClone(DEFAULT_SETTINGS),_mode:'vault',_resultCategory:'content',_input:{value:'query'},
     _contentSearch:true,_searchTags:true,_searchWikiLinks:false,_searchMdLinks:false,_searchBookmarks:false,_searchProperties:true,
     _searchCommands:false,_searchNonMarkdown:false,_extendedContext:true,_selectedPreset:'preset',_limitContentResults:false,
     _vaultSortMode:'alpha-asc',_activeEngineId:null,_groupPages:new Map([['Vault 文件',2]]),_historyVer:0,_vaultSearchVer:0,_webSearchVer:0,
@@ -66,6 +66,8 @@ test('page handoff carries local filters and clones settings without persisting 
   });
   let queried='';
   const session=fixture.getSearchSession();
+  expect(session.quickExcludedPaths).toEqual(['path:Work/assets']);
+  expect(session.quickExcludedPaths).not.toBe(fixture._quickExcludedPaths);
   expect(session.temporaryFilter.paths).toEqual(['glob:**/assets/**']);
   expect(session.temporaryFilter).not.toBe(fixture._temporaryFilter);
   expect(session.settings.searchProperties).toBe(true);

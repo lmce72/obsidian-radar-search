@@ -1,4 +1,4 @@
-import {excludedByFilter} from './path-filter.ts';
+import {excludedByFilter,filterWithExclusions} from './path-filter.ts';
 import * as Obsidian from 'obsidian';
 import { moment } from '../shared/moment.ts';
 import { SHEET_BREAKPOINT, MIN_PANEL_H, PILL_ICON_SIZE, EXT_ICON } from '../shared/constants.ts';
@@ -23,7 +23,7 @@ _indexEngine() {
 
 _excludedPredicate() {
             const preset=this.cfg.searchPresets.find(p=>p.name===this._selectedPreset);
-            return excludedByFilter(this._temporaryFilter||{mode:preset?.mode||'黑名单',paths:preset?.excludeFolders||this.cfg.excludePaths});
+            return excludedByFilter(filterWithExclusions(this._temporaryFilter||{mode:preset?.mode||'黑名单',paths:preset?.excludeFolders||this.cfg.excludePaths},this._quickExcludedPaths||[]));
         }
 
 _indexQuery(q) {

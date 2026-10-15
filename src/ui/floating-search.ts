@@ -55,6 +55,7 @@ export class FloatingSearch extends Component {
     this.registerDomEvent(this.document, 'keydown', event => {
       if (event.key !== 'Escape') return;
       const component=this.plugin.components.get(this.contentEl)?.component;
+      if(component?._quickFilterMenu){event.preventDefault();event.stopPropagation();component._quickFilterMenu.close();return;}
       if(this.document.querySelector('.suggestion-container:has(.primecore-folder-suggestion)'))return;
       event.preventDefault();event.stopPropagation();
       if(component?._resultToolView&&component._resultToolView!=='results')component._returnToResults();
@@ -64,7 +65,7 @@ export class FloatingSearch extends Component {
       if(isDirectorySuggestion(event.target))return;
       const component = this.plugin.components.get(this.contentEl)?.component;
       const layers = [this.contentEl, component?._dropdown, component?._scopeMenu,
-        component?._vaultSearchPanel, component?._panelMask, component?._sourceEditor];
+        component?._vaultSearchPanel, component?._panelMask, component?._sourceEditor,component?._quickFilterMenu?.el];
       if (!layers.some(element => element?.contains(event.target))) this.close();
     });
     this.register(() => {

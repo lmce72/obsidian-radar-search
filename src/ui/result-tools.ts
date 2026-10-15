@@ -1,7 +1,7 @@
 import {Setting} from 'obsidian';
 import {ActionButton,ActionToolbar} from '../settings/controls.ts';
 import {StringListEditor} from '../settings/editors.ts';
-import {validatePathFilter,presetFromFilter} from '../search/path-filter.ts';
+import {validatePathFilter,presetFromFilter,filterWithExclusions} from '../search/path-filter.ts';
 import {SORT_OPTIONS} from '../search/sort.ts';
 import type {PathFilter,SortMode} from '../types.ts';
 
@@ -11,14 +11,14 @@ export const withResultTools=Base=>class extends Base {
     this._sortButton=new ActionButton(this._resultToolsEl,{icon:'arrow-down-up',label:'排序',onClick:event=>{event.stopPropagation();this._openSortView();}});
     this._filterButton=new ActionButton(this._resultToolsEl,{icon:'filter',label:'临时过滤',onClick:event=>{event.stopPropagation();this._openFilterView();}});
     this._resultToolView='results';this._temporaryFilter=null;
-    this.register(()=>this._toolListEditor?.dispose());
+    this.register(()=>{this._toolListEditor?.dispose();this._quickFilterMenu?.close();});
   }
   _syncResultTools(history=false) {
     this._resultToolsEl.style.display=history||this._mode==='web'?'none':'flex';
-    this._filterButton.buttonEl.toggleClass('is-active',!!this._temporaryFilter);
-    this._filterButton.buttonEl.setAttribute('aria-pressed',String(!!this._temporaryFilter));
+    this._filterButton.buttonEl.toggleClass('is-active',!!this._temporaryFilter||!!this._quickExcludedPaths.length);
+    this._filterButton.buttonEl.setAttribute('aria-pressed',String(!!this._temporaryFilter||!!this._quickExcludedPaths.length));
     this._sortButton.buttonEl.title=SORT_OPTIONS[this._vaultSortMode]||'相关度';
-    this._filterButton.buttonEl.title=this._temporaryFilter?'当前搜索正在使用临时过滤条件':'设置当前搜索的过滤规则';
+    this._filterButton.buttonEl.title=this._temporaryFilter||this._quickExcludedPaths.length?'当前搜索正在使用临时过滤条件':'设置当前搜索的过滤规则';
   }
   _openToolView(kind:'sort'|'filter'|'presetName',title:string,onBack:()=>void) {
     ++this._historyVer;
@@ -57,13 +57,13 @@ export const withResultTools=Base=>class extends Base {
   _openFilterView(keepDraft=false) {
     if(!keepDraft) {
       const selected=this.cfg.searchPresets.find(p=>p.name===this._selectedPreset);
-      this._filterDraft=structuredClone(this._temporaryFilter||{mode:selected?.mode||'黑名单',paths:selected?.excludeFolders||this.cfg.excludePaths});
+      this._filterDraft=filterWithExclusions(this._temporaryFilter||{mode:selected?.mode||'黑名单',paths:selected?.excludeFolders||this.cfg.excludePaths},this._quickExcludedPaths);
     }
     const draft:PathFilter=this._filterDraft;
     const {toolbar,status,body}=this._openToolView('filter','临时过滤器',()=>this._returnToResults());
-    toolbar.add('check','应用',()=>{try{this._temporaryFilter=validatePathFilter(draft);this._groupPages.clear();this._rerunResults();}catch(error){status.setText(error.message);}});
+    toolbar.add('check','应用',()=>{try{this._temporaryFilter=validatePathFilter(draft);this._quickExcludedPaths=[];this._groupPages.clear();this._rerunResults();}catch(error){status.setText(error.message);}});
     toolbar.add('save','保存为预设',()=>{try{this._filterDraft=validatePathFilter(draft);this._openPresetNameView();}catch(error){status.setText(error.message);}});
-    toolbar.add('rotate-ccw','清除临时过滤',()=>{this._temporaryFilter=null;this._groupPages.clear();this._rerunResults();});
+    toolbar.add('rotate-ccw','清除临时过滤',()=>{this._temporaryFilter=null;this._quickExcludedPaths=[];this._groupPages.clear();this._rerunResults();});
     new Setting(body).setName('过滤方式').setDesc('临时覆盖当前预设；仅影响仓库文件结果，返回不应用草稿。').addDropdown(control=>control.addOptions({'黑名单':'排除匹配项','白名单':'仅搜索匹配项'}).setValue(draft.mode).onChange(value=>draft.mode=value as PathFilter['mode']));
     this._toolListEditor=new StringListEditor(body,{app:this.app,value:draft.paths,onChange:paths=>{draft.paths=paths;},onExample:example=>{draft.mode=example.mode;this._openFilterView(true);},placeholder:'目录、glob:**/assets/** 或 regex:/表达式/i'});
   }
@@ -78,7 +78,7 @@ export const withResultTools=Base=>class extends Base {
         await this.plugin.updateSettings({searchPresets:[...this.plugin.settings.searchPresets,preset]},false);
         if(this._disposed)return;
         this.cfg.searchPresets=structuredClone(this.plugin.settings.searchPresets);
-        this._selectedPreset=preset.name;this._temporaryFilter=null;
+        this._selectedPreset=preset.name;this._temporaryFilter=null;this._quickExcludedPaths=[];
         this._rebuildPresetOptions?.();
         if(this._contentToggleLabelEl)this._contentToggleLabelEl.setText(preset.name);
         if(this._contentToggleIconEl)this._setIcon(this._contentToggleIconEl,'filter',16);

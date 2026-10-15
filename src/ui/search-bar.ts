@@ -15,14 +15,18 @@ import { withInteractions } from '../ui/interactions.ts';
 import { withMetadataSearch } from '../search/metadata-search.ts';
 import { withHistory } from '../history/history-behavior.ts';
 import { withEvents } from '../ui/events.ts';
+import {withQuickFiltering} from './quick-filtering.ts';
+import type {QuickExclusionMenu} from './quick-exclusion-menu.ts';
 import {withResultTools} from './result-tools.ts';
 import {withResultPresentation} from './result-presentation.ts';
 type SearchBarBehavior = Component & {render():Promise<void>;_focusInput():void;_teardownIndexFlush():void;_returnToResults():void;getSearchSession():SearchSession;applySearchSession(session:SearchSession):Promise<void>};
-const Behavior = [withResultTools, withResultPresentation, withLayout, withPanel, withWebOptions, withNavigation, withResults, withSnippets, withIndexIntegration, withVaultSearch, withGlobalSearch, withWebSearch, withInteractions, withMetadataSearch, withHistory, withEvents].reduce<unknown>((Base, mixin) => mixin(Base), Component) as new () => SearchBarBehavior;
+const Behavior = [withQuickFiltering,withResultTools, withResultPresentation, withLayout, withPanel, withWebOptions, withNavigation, withResults, withSnippets, withIndexIntegration, withVaultSearch, withGlobalSearch, withWebSearch, withInteractions, withMetadataSearch, withHistory, withEvents].reduce<unknown>((Base, mixin) => mixin(Base), Component) as new () => SearchBarBehavior;
 export class SearchBarComponent extends Behavior {
   declare presentation:'floating'|'page';
   declare _resultCategory:ResultCategory;
   declare _resultCategoryChosen:boolean;
+  declare _quickExcludedPaths:string[];
+  declare _quickFilterMenu:QuickExclusionMenu|null;
   declare _resultToolView:'results'|'sort'|'filter'|'presetName';
   declare _temporaryFilter:import('../types.ts').PathFilter|null;
   declare _resultKind:'results'|'history';
@@ -97,7 +101,7 @@ constructor(plugin:RadarSearchPlugin, container:HTMLElement, options:SearchMount
             this.plugin = plugin;
             this.presentation=options.presentation||'floating';
             this._resultCategory='files';
-            this._resultCategoryChosen=false;
+            this._resultCategoryChosen=false;this._quickExcludedPaths=[];this._quickFilterMenu=null;
             this._disposed = false;
             this._timers = new Set();
             this._frames = new Set();
