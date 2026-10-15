@@ -40,8 +40,8 @@ export class FloatingSearch extends Component {
     try {
       const component = await this.plugin.mount(this.contentEl, this);
       if (this.plugin.floatingSearch === this) component._focusInput();
-    } catch (error) {
-      this.plugin.report('error', '浮动搜索框打开失败', error);
+    } catch {
+      // mount already reports the failure and removes its partial component.
       this.close();
     }
   }

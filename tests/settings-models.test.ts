@@ -47,3 +47,14 @@ test('batch validates every field before mutating and persists related values to
   await store.updateMany({searchPresets:[{name:'New',mode:'黑名单',excludeFolders:[]}],defaultPreset:'New'});
   expect(saved).toHaveLength(1);expect(saved[0].searchPresets[0].name).toBe(saved[0].defaultPreset);
 });
+test('failed settings writes leave committed state intact and queued writes can recover',async()=>{
+  let attempts=0;const saved=[];
+  const store=new SettingsStore({loadData:async()=>null,saveData:async value=>{if(++attempts===1)throw new Error('disk full');saved.push(structuredClone(value));},report:()=>{}});
+  store.settings=structuredClone(DEFAULT_SETTINGS);
+  const failed=store.update('defaultMode','web');
+  const recovered=store.update('historyPageSize',12);
+  expect(store.settings.defaultMode).toBe('vault');
+  await expect(failed).rejects.toThrow('disk full');await recovered;
+  expect(store.settings.defaultMode).toBe('vault');expect(store.settings.historyPageSize).toBe(12);
+  expect(saved).toHaveLength(1);expect(saved[0].defaultMode).toBe('vault');
+});

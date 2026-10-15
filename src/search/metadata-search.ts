@@ -3,9 +3,25 @@ import { moment } from '../shared/moment.ts';
 import { SHEET_BREAKPOINT, MIN_PANEL_H, PILL_ICON_SIZE, EXT_ICON } from '../shared/constants.ts';
 import { IconRenderer } from '../shared/icons.ts';
 import { makeTouchHandler } from '../shared/touch.ts';
+import {externalLinks} from './external-links.ts';
 
 // One cohesive behavior; shared state belongs to SearchBarComponent.
 export const withMetadataSearch = Base => class extends Base {
+async _buildExternalLinkItems(terms,fuzzy,isExcluded,isStale) {
+            const items=[];
+            for(const file of this.app.vault.getMarkdownFiles()) {
+                if(isStale())return [];
+                if(isExcluded(file))continue;
+                try {
+                    const text=await this.app.vault.cachedRead(file);
+                    if(isStale())return [];
+                    const url=externalLinks(text).find(link=>fuzzy?!!fuzzy(link):terms.every(term=>link.toLowerCase().includes(term)));
+                    if(url)items.push({path:file.path,label:file.basename,sub:url,twoLine:true,icon:this._fileIconName(file),action:()=>this._openVaultResult(file.path,file.basename)});
+                    if(items.length>=5)break;
+                } catch(error) {this._log('warn',`[SearchBar] 外链读取失败 (${file.path}):`,error);}
+            }
+            return items;
+        }
 _getSearchableFiles() {
             try {
                 return this._searchNonMarkdown ? this.app.vault.getFiles() : this.app.vault.getMarkdownFiles();

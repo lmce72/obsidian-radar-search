@@ -5,6 +5,26 @@ const {SettingsStore}=await import('../src/settings/store.ts');
 const {DEFAULT_SETTINGS,normalizeSettings,validateSetting}=await import('../src/settings/schema.ts');
 const {createSearchIndexEngine}=await import('../src/search/index-engine.ts');
 const {makeTouchHandler}=await import('../src/shared/touch.ts');
+const {withIndexIntegration}=await import('../src/search/index-integration.ts');
+const {normalizeSuggestions}=await import('../src/search/web-search.ts');
+
+test('web suggestions reject non-text provider entries before rendering and sorting',()=>{
+  expect(normalizeSuggestions(['one',null,12,{},'', 'two'])).toEqual(['one','two']);
+  expect(normalizeSuggestions(null)).toEqual([]);
+  expect(normalizeSuggestions(Array.from({length:10},(_,i)=>String(i)))).toHaveLength(6);
+});
+
+test('indexed content results preserve the file path used by per-item directory exclusions',async()=>{
+  const file={path:'Work/Archive/note.md',basename:'note',parent:{path:'Work/Archive'}};
+  const fixture=Object.assign(new (withIndexIntegration(class {}))(),{
+    app:{vault:{getAbstractFileByPath:()=>file,cachedRead:async()=> 'needle in note'}},
+    _isVaultStale:()=>false,_extractAllSnippets:()=>[{text:'needle in note',start:0,end:6}],
+    _fileLabel:()=>file.basename,_fileIconName:()=> 'file',_openVaultResult:()=>{},_openContentResult:()=>{}
+  });
+  const items=await fixture._contentItemsFromEngine([{path:file.path}],['needle'],20,1);
+  expect(items).toHaveLength(1);
+  expect(items[0].path).toBe(file.path);
+});
 
 test('normalization preserves current settings and isolates defaults',async()=>{
   const input={...structuredClone(DEFAULT_SETTINGS),defaultMode:'web',searchPresets:[{name:'Example',mode:'白名单',excludeFolders:['Example'],icon:'files'}]};

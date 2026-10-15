@@ -154,16 +154,7 @@ async _searchVault(q) {
 
                 // 外部链接匹配
                 if (this._searchMdLinks) {
-                    const mdItems = [];
-                    for (const f of this.app.vault.getMarkdownFiles().filter(f => !isExcluded(f))) {
-
-                        const links = this.app.metadataCache.getFileCache(f)?.links || [];
-                        const hit   = links.find(l => /^https?:\/\//.test(l.original || "") && (_fuzzyFn ? !!_fuzzyFn(l.link) : terms.every(t => l.link.toLowerCase().includes(t))));
-                        if (hit) {
-                            mdItems.push({ path:f.path,label: f.basename, sub: hit.link, twoLine: true, icon: this._fileIconName(f), action: () => this._openVaultResult(f.path, f.basename) });
-                            if (mdItems.length >= 5) break;
-                        }
-                    }
+                    const mdItems = await this._buildExternalLinkItems(terms, _fuzzyFn, isExcluded, () => this._isVaultStale(ver));
                     if (mdItems.length > 0) specialGroups.push({ title: "外链匹配", items: mdItems });
                 }
 

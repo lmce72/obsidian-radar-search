@@ -1,6 +1,6 @@
 import {test,expect} from 'bun:test';
 import {extractContentMatches,resolveContentMatch,offsetToPosition} from '../src/search/content-matches.ts';
-import {availableCategories,filterResultGroups} from '../src/search/result-categories.ts';
+import {availableCategories,filterResultGroups,resultCategoryStates} from '../src/search/result-categories.ts';
 import {DEFAULT_SETTINGS} from '../src/settings/schema.ts';
 
 test('snippets retain raw source offsets across whitespace, Unicode and CRLF',()=>{
@@ -55,6 +55,19 @@ test('each result group has its own tab, including hidden commands and link type
   expect(groups).toHaveLength(8);
 });
 
+test('empty result categories are disabled and selection moves to an available result category',()=>{
+  const cfg={...structuredClone(DEFAULT_SETTINGS),vaultContentSearch:true,searchTags:true};
+  const groups=[{title:'Vault 文件',items:[]},{title:'内容匹配',items:[{}]},{title:'标签匹配',items:[{}]}];
+  const states=resultCategoryStates(cfg,'vault','query',groups,'files');
+  expect(states.find(c=>c.id==='files').disabled).toBe(true);
+  expect(states.find(c=>c.id==='content').selected).toBe(true);
+  expect(states.find(c=>c.id==='tags').disabled).toBe(false);
+  expect(resultCategoryStates(cfg,'vault','query',groups,'tags').find(c=>c.id==='tags').selected).toBe(true);
+  const empty=resultCategoryStates(cfg,'vault','query',[],'content');
+  expect(empty.every(c=>c.disabled)).toBe(true);
+  expect(empty.some(c=>c.selected)).toBe(false);
+});
+
 test('page handoff carries local filters and clones settings without persisting them',async()=>{
   const {withResultPresentation}=await import('../src/ui/result-presentation.ts');
   const fixture=Object.assign(new (withResultPresentation(class {}))(),{
@@ -78,7 +91,15 @@ test('page handoff carries local filters and clones settings without persisting 
   await fixture.applySearchSession(session);
   expect(fixture._temporaryFilter).toEqual(session.temporaryFilter);
   expect(fixture._resultCategory).toBe('content');
+  expect(fixture._preferredResultCategory).toBe('content');
   expect(fixture._groupPages.size).toBe(0);
   expect(queried).toBe('query');
   expect(fixture.cfg).not.toBe(session.settings);
+});
+test('web-only results do not pass through vault category filtering',async()=>{
+  const {withResultPresentation}=await import('../src/ui/result-presentation.ts');
+  const fixture=Object.assign(new (withResultPresentation(class {}))(),{_mode:'web',_resultCategory:'files'});
+  const groups=[{title:'Example',items:[{label:'query'}]}];
+  expect(fixture._visibleResultGroups(groups)).toEqual(groups);
+  fixture._mode='vault';expect(fixture._visibleResultGroups(groups)).toEqual([]);
 });

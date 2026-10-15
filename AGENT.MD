@@ -5,6 +5,13 @@
 - Use native Obsidian UI and icon APIs; keep the plugin independent of Iconize and external vault scripts.
 - Do not commit personal settings, history, credentials, absolute local paths or generated release assets.
 - Preserve the existing `primecore-search` plugin ID so installed settings and command shortcuts continue working; the public brand is **Radar Search**.
+- Limit UI changes to the controls named in the request. The search-options capsule beside the input and individual search-result items are different controls; do not apply label changes globally.
+
+## Runtime verification
+
+- Use a dedicated clean vault with synthetic fixtures for integration tests; never leave test queries, notes or mock result rows in a personal vault.
+- Verify complete mounting, error reports, event binding, async query cancellation, and cleanup. A visible search bar alone does not demonstrate successful initialization.
+- Exercise both floating and page presentations, empty results, filters and presets, plus failure recovery when those paths change.
 
 ## Releases
 

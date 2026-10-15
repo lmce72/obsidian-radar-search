@@ -16,7 +16,12 @@ export class SettingsStore {
   update<K extends keyof SearchSettings>(key:K,value:SearchSettings[K]) { return this.updateMany({[key]:value}); }
   updateMany(changes:SettingsPatch) {
     const validated=Object.fromEntries(Object.entries(changes).map(([key,value])=>[key,validateSetting(key,value)]));
-    Object.assign(this.settings,validated);return this.persist();
+    const operation=this.pending.catch(error=>this.plugin.report('error','上次设置保存失败',error)).then(async()=>{
+      const snapshot={...structuredClone(this.settings),...validated};
+      await this.plugin.saveData(snapshot);
+      Object.assign(this.settings,validated);
+    });
+    this.pending=operation;return operation;
   }
   persist() {
     const snapshot=structuredClone(this.settings);

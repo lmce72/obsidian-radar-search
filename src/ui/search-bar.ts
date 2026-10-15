@@ -24,6 +24,7 @@ const Behavior = [withQuickFiltering,withResultTools, withResultPresentation, wi
 export class SearchBarComponent extends Behavior {
   declare presentation:'floating'|'page';
   declare _resultCategory:ResultCategory;
+  declare _preferredResultCategory:ResultCategory;
   declare _resultCategoryChosen:boolean;
   declare _quickExcludedPaths:string[];
   declare _quickFilterMenu:QuickExclusionMenu|null;
@@ -101,6 +102,7 @@ constructor(plugin:RadarSearchPlugin, container:HTMLElement, options:SearchMount
             this.plugin = plugin;
             this.presentation=options.presentation||'floating';
             this._resultCategory='files';
+            this._preferredResultCategory='files';
             this._resultCategoryChosen=false;this._quickExcludedPaths=[];this._quickFilterMenu=null;
             this._disposed = false;
             this._timers = new Set();

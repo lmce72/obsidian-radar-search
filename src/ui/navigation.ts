@@ -69,7 +69,7 @@ _flattenBookmarks(items) {
         }
 
 _selectMode(mode,runSearch=true) {
-            if(this._mode!==mode) {this._resultCategory='files';this._resultCategoryChosen=false;}
+            if(this._mode!==mode) {this._resultCategory='files';this._preferredResultCategory='files';this._resultCategoryChosen=false;}
             this._mode = mode;
             this._syncSearchAction();
             const mcfg = this._modeConfig()[mode];

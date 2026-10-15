@@ -121,7 +121,9 @@ _renderDropdown(groups) {
             const allGroups=groups;
             groups=visibleGroups;
             if(!groups.some(group=>group.items.length)) {
-                this._dropdownInner.createDiv({cls:'primecore-results-empty',text:'没有匹配的结果'});
+                const empty=this._dropdownInner.createDiv({cls:'primecore-results-empty',attr:{role:'status'}});
+                this._setIcon(empty.createSpan({cls:'primecore-results-empty-icon',attr:{'aria-hidden':'true'}}),'inbox',64);
+                empty.createDiv({text:'什么都木有'});
                 this._showDropdown();return;
             }
             for (let gi = 0; gi < groups.length; gi++) {

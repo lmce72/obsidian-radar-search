@@ -311,31 +311,15 @@ _bindEvents() {
         }
 
 async render() {
-            try {
-                const rgb = this._getSeasonRgb();
-                this._buildShell(rgb);
-                this._syncSearchAction();
-                this._buildDropdown();
-                this._buildScopeMenu();
-                this._buildVaultSearchPanel(rgb);
-                this._buildPanelMask();
-                this._bindEvents();
-                // 接索引引擎：adapter 注入 + 后台分块建索引（引擎缺席时静默跳过，走旧路径）
-                // Wire the index engine: adapter injection + background chunked build. With the
-                // engine missing this is a no-op and the legacy path keeps working.
-                this._setupIndexEngine();
-            } catch (e) {
-                this._log("error", "[SearchBar] render 失败:", e);
-                const errEl = this.container.createDiv({
-                    text: "⚠ 搜索栏加载失败，请检查控制台日志"
-                });
-                Object.assign(errEl.style, {
-                    padding: "8px 12px",
-                    borderRadius: "6px",
-                    border: "1px solid var(--text-error)",
-                    color: "var(--text-error)",
-                    fontSize: "12px"
-                });
-            }
+            // mount owns rollback and reporting, including layers created before events bind.
+            const rgb = this._getSeasonRgb();
+            this._buildShell(rgb);
+            this._syncSearchAction();
+            this._buildDropdown();
+            this._buildScopeMenu();
+            this._buildVaultSearchPanel(rgb);
+            this._buildPanelMask();
+            this._bindEvents();
+            this._setupIndexEngine();
         }
 };

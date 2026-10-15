@@ -70,6 +70,7 @@ async _contentItemsFromEngine(rows, terms, ctxLen, ver) {
                     const hits=this._extractAllSnippets(text,terms,ctxLen);
                     if(!hits.length)continue;
                     out.push({
+                        path: f.path,
                         label: this._fileLabel(f),
                         sub: f.parent?.path || "/",
                         terms,

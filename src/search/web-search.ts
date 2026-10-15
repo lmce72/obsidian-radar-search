@@ -4,6 +4,10 @@ import { SHEET_BREAKPOINT, MIN_PANEL_H, PILL_ICON_SIZE, EXT_ICON } from '../shar
 import { IconRenderer } from '../shared/icons.ts';
 import { makeTouchHandler } from '../shared/touch.ts';
 
+export function normalizeSuggestions(value:unknown):string[] {
+  return Array.isArray(value)?value.filter((item):item is string=>typeof item==='string'&&!!item.trim()).slice(0,6):[];
+}
+
 // One cohesive behavior; shared state belongs to SearchBarComponent.
 export const withWebSearch = Base => class extends Base {
   declare _webSearchVer;
@@ -55,10 +59,11 @@ _buildWebGroups(q, engines, isStale, onGroups) {
                         if (eng.id === "google" || eng.id === "duckduckgo") {
                             suggestions = Array.isArray(data) && Array.isArray(data[1]) ? data[1].slice(0, 6) : [];
                         } else if (eng.id === "bing") {
-                            try { suggestions = data.AS.Results[0].Suggests.map(s => s.Txt).slice(0, 6); } catch (_) {}
+                            try { suggestions = data.AS.Results[0].Suggests.map(s => s?.Txt).slice(0, 6); } catch (_) {}
                         } else {
                             if (Array.isArray(data) && Array.isArray(data[1])) suggestions = data[1].slice(0, 6);
                         }
+                        suggestions=normalizeSuggestions(suggestions);
                         slots[i] = {
                             title: eng.name,
                             items: suggestions.length > 0

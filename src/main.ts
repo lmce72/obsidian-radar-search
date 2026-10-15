@@ -69,9 +69,15 @@ export default class RadarSearchPlugin extends Plugin {
     this.components.set(container,record);
     component.register(()=>{if(this.components.get(container)===record)this.components.delete(container);});
     owner.addChild(component);
-    await component.render();
-    if(options.session)await component.applySearchSession(options.session);
-    return component;
+    try {
+      await component.render();
+      if(options.session)await component.applySearchSession(options.session);
+      return component;
+    } catch(error) {
+      this.unmount(container);
+      this.report('error','搜索栏加载失败',error);
+      throw error;
+    }
   }
   unmount(container:HTMLElement) {
     const record=this.components.get(container);
