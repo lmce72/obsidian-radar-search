@@ -8,7 +8,8 @@
 
 ## Releases
 
-- **Release version numbers and Git tags must never have a `v` prefix.** Use `1.0.0`, not `v1.0.0`.
+- **GitHub Release titles and Git tags must contain only the exact version from `manifest.json.version`.** For example, the manifest version, Release title and tag must all be `1.1.0`.
+- Never add a `v` prefix, plugin name, descriptive text or other suffix/prefix to a Release title or tag. Use `--title "$RELEASE_VERSION"` when publishing with `gh`.
 - Keep `package.json`, `manifest.json` and `versions.json` consistent.
 - Run `bun run release:check <version>` before tagging. The tag must exactly equal `manifest.json.version`.
 - Update `RELEASE_NOTES.md`, then publish `dist/main.js`, `dist/manifest.json` and `dist/styles.css` as GitHub Release assets.
