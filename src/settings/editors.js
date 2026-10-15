@@ -2,6 +2,7 @@ import { Setting, TextComponent, DropdownComponent, ToggleComponent, TFolder } f
 import { IconRenderer } from '../shared/icons.js';
 import { CollectionDraft, booleanFields } from './models.js';
 import { ActionButton, ActionToolbar } from './controls.js';
+import { LABELS } from './fields.js';
 
 // Shared draft/save/reset behavior for every structured model.
 // 所有结构化模型统一使用草稿、保存与还原交互。
@@ -9,7 +10,7 @@ class ModelEditor {
   constructor(tab,key,parent,toolbar) {
     this.tab=tab;this.key=key;
     this.root=parent.createDiv({cls:'primecore-settings-model'});this.root.dataset.settingsModel=key;
-    this.toolbar=toolbar||new ActionToolbar(this.root);
+    this.toolbar=toolbar||new ActionToolbar(this.root,LABELS[key]);
     this.saveButton=this.toolbar.add('save','保存修改',()=>this.commit()).setDisabled(true);
     this.resetButton=this.toolbar.add('rotate-ccw','还原',()=>{this.reset();this.render();this.setDirty(false);}).setDisabled(true);
     this.body=this.root.createDiv();
@@ -34,7 +35,7 @@ export class StringListEditor {
     this.value=structuredClone(value);this.onChange=onChange;this.placeholder=placeholder;this.options=options;this.folders=folders;
     this.root=parent.createDiv();
     if(showToolbar) {
-      this.toolbar=toolbar||new ActionToolbar(this.root);
+      this.toolbar=toolbar||new ActionToolbar(this.root,'路径列表');
       this.toolbar.prepend(this.toolbar.add('plus','添加一项',()=>this.add()));
     }
     this.body=this.root.createDiv();this.render();
