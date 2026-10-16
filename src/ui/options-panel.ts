@@ -194,6 +194,10 @@ _buildVaultSearchPanel(rgb) {
             const headerActions=this._vaultSearchPanel.createDiv({cls:'primecore-result-tools'});
             this._panelQuickFilterButton=this._addQuickFilterButton(headerActions);
             this._panelQuickFilterButton.buttonEl.setCssStyles({display: this._mode==='web'?'none':'inline-flex'});
+            const settingsButton=this._mkNavBtn('settings',14);
+            settingsButton.setAttribute('aria-label','插件设置');settingsButton.title='插件设置';
+            this._listen(settingsButton,'click',event=>{event.stopPropagation();this._closePanel({restoreDropdown:false});this.plugin.openSettings();});
+            headerActions.appendChild(settingsButton);
             headerActions.appendChild(closeBtn);
             this._mkFloatHeader(this._vaultSearchPanel, '搜索选项', headerActions);
 

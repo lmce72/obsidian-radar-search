@@ -13,6 +13,7 @@
 - Use a dedicated clean vault with synthetic fixtures for integration tests; never leave test queries, notes or mock result rows in a personal vault.
 - Verify complete mounting, error reports, event binding, async query cancellation, and cleanup. A visible search bar alone does not demonstrate successful initialization.
 - Exercise both floating and page presentations, empty results, filters and presets, plus failure recovery when those paths change.
+- For embedded-search changes, test real primecore-search fenced blocks in Reading and Live Preview, multiple instances in one note, and note/mode switches; an isolated mount alone does not cover editor interaction.
 
 ## Releases
 

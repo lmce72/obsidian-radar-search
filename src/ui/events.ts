@@ -1,4 +1,5 @@
 import {isDirectorySuggestion} from './directory-suggest.ts';
+import {bindButtonActivation} from '../shared/button-activation.ts';
 import * as Obsidian from 'obsidian';
 import { moment } from '../shared/moment.ts';
 import { SHEET_BREAKPOINT, MIN_PANEL_H, PILL_ICON_SIZE, EXT_ICON } from '../shared/constants.ts';
@@ -85,13 +86,7 @@ _bindEvents() {
             // 清除按钮事件
             if (this._clearBtn) {
                 this._listen(this._clearBtn, "mousedown",  (e) => e.preventDefault());
-                const clearHandler = this._makeTouchHandler((e) => {
-                    e.preventDefault();
-                    this._clearSearchInput();
-                });
-                this._listen(this._clearBtn, "touchstart", clearHandler.onTouchStart, { passive: true });
-                this._listen(this._clearBtn, "touchend", clearHandler.onTouchEnd);
-                this._listen(this._clearBtn, "click", () => this._clearSearchInput());
+                this.register(bindButtonActivation(this._clearBtn,()=>this._clearSearchInput()));
                 this._listen(this._clearBtn, "mouseenter", () => this._setSearchButtonBackground(this._clearBtn, true));
                 this._listen(this._clearBtn, "mouseleave", () => this._setSearchButtonBackground(this._clearBtn));
             }
@@ -107,10 +102,7 @@ _bindEvents() {
             });
 
             // 搜索按钮
-            const goBtnHandler = this._makeTouchHandler(() => this._executeSearch());
-            this._listen(this._goBtn, "touchstart", goBtnHandler.onTouchStart, { passive: true });
-            this._listen(this._goBtn, "touchend", goBtnHandler.onTouchEnd);
-            this._listen(this._goBtn, "click", () => this._executeSearch());
+            this.register(bindButtonActivation(this._goBtn,()=>this._executeSearch()));
 
             // scopeBtn：切换模式选择菜单
             const _openScopeMenu = () => {
@@ -139,16 +131,7 @@ _bindEvents() {
             const _toggleScopeMenu = () => {
                 this._isScopeMenuOpen() ? this._closeScopeMenu() : _openScopeMenu();
             };
-            const scopeBtnHandler = this._makeTouchHandler((e) => {
-                e.preventDefault();
-                _toggleScopeMenu();
-            });
-            this._listen(this._scopeBtn, "touchstart", scopeBtnHandler.onTouchStart, { passive: true });
-            this._listen(this._scopeBtn, "touchend", scopeBtnHandler.onTouchEnd);
-            this._listen(this._scopeBtn, "click", (e) => {
-                e.stopPropagation();
-                _toggleScopeMenu();
-            });
+            this.register(bindButtonActivation(this._scopeBtn,_toggleScopeMenu));
 
             // contentToggleBtn：点击打开/关闭搜索选项面板
             const _openPanel = () => {
@@ -182,16 +165,7 @@ _bindEvents() {
             const _togglePanel = () => {
                 this._vaultPanelOpen ? this._closePanel() : _openPanel();
             };
-            const contentToggleBtnHandler = this._makeTouchHandler((e) => {
-                e.preventDefault();
-                _togglePanel();
-            });
-            this._listen(this._contentToggleBtn, "touchstart", contentToggleBtnHandler.onTouchStart, { passive: true });
-            this._listen(this._contentToggleBtn, "touchend", contentToggleBtnHandler.onTouchEnd);
-            this._listen(this._contentToggleBtn, "click", (e) => {
-                e.stopPropagation();
-                _togglePanel();
-            });
+            this.register(bindButtonActivation(this._contentToggleBtn,_togglePanel));
             this._listen(this._contentToggleBtn, "mouseenter", () => {
                 const rgb = this._getSeasonRgb();
                 // 悬停要比静息态(0.12)更亮，否则会越悬停越暗
@@ -239,20 +213,22 @@ _bindEvents() {
                 this.register(()=>{viewport.removeEventListener('resize',_onScrollResize);viewport.removeEventListener('scroll',_onScrollResize);});
             }
 
-            // 点击外部关闭浮层（dropdown / scopeMenu / vaultSearchPanel / 遮罩 都挂在 body，需特判）
-            this._listen(document, "click", (e) => {
+            // Capture the press before editor widgets / buttons stop bubbling their click.
+            // All floating layers are owned by this component, not by the enclosing note.
+            this._listen(document, "pointerdown", (e) => {
                 if(isDirectorySuggestion(e.target)||this._quickFilterMenu?.el.contains(e.target))return;
                 const inWrap  = this._wrap.contains(e.target);
                 const inDrop  = this._dropdown.contains(e.target);
                 const inMenu  = this._scopeMenu.contains(e.target);
                 const inPanel = this._vaultSearchPanel?.contains(e.target);
                 const inMask  = this._panelMask?.contains(e.target);
-                if (!inWrap && !inDrop && !inMenu && !inPanel && !inMask) {
+                const inEditor = this._sourceEditor?.contains(e.target);
+                if (!inWrap && !inDrop && !inMenu && !inPanel && !inMask && !inEditor) {
                     this._hideDropdown();
                     this._closeScopeMenu();
-                    this._closePanel();
+                    this._closePanel({restoreDropdown:false});
                 }
-            });
+            },{capture:true,passive:true});
 
             // 主题热更新
             this._listen(window, "theme:apply", () => {

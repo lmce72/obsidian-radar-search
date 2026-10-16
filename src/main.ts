@@ -5,6 +5,7 @@ import { createSearchIndexEngine } from './search/index-engine.ts';
 import { SettingsStore } from './settings/store.ts';
 import { SearchSettingTab } from './settings/tab.ts';
 import { HistoryStore } from './history/store.ts';
+import {openPluginSettings} from './settings/open-settings.ts';
 import { PLUGIN_ICON_ID, registerPluginIcon } from './shared/plugin-icon.ts';
 import type {SearchSettings,SettingsPatch,SearchMountOptions,SearchSession} from './types.ts';
 
@@ -100,6 +101,10 @@ export default class RadarSearchPlugin extends Plugin {
     if(this.floatingSearch) {this.components.get(this.floatingSearch.contentEl)?.component._focusInput();return;}
     this.floatingSearch=new FloatingSearch(this);
     this.floatingSearch.open();
+  }
+  openSettings() {
+    try {this.floatingSearch?.close();openPluginSettings(this.app,this.manifest.id);}
+    catch(error) {this.report('error','打开插件设置失败',error);}
   }
   async openSearchPage(session?:SearchSession) {
     let leaf=this.app.workspace.getLeavesOfType(VIEW_TYPE)[0];
